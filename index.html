@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F8FB">
+<link rel="icon" href="logo.svg">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<title>오늘의 핸드 운세 · 핸드톡</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <div class="brand"><img src="logo.svg" alt="" width="24" height="24"><span>핸드톡</span></div>
+    <h1>오늘의 핸드 운세</h1>
+    <p class="date" id="date"></p>
+  </header>
+
+  <section id="start" class="panel" aria-labelledby="startTitle">
+    <div class="deck" aria-hidden="true">
+      <div class="card back"></div><div class="card back"></div><div class="card back"></div>
+    </div>
+    <h2 id="startTitle" class="sr-only">시작하기</h2>
+    <p class="intro">오늘의 내 핸드 2장과 보드 5장을 확인해 보세요.<br>닉네임을 입력하면 나만의 핸드가 나와요.</p>
+    <label for="nick" class="lbl">닉네임 (선택)</label>
+    <input id="nick" type="text" maxlength="16" autocomplete="nickname" placeholder="예: 리버의신">
+    <button id="dealBtn" class="btn primary" type="button">오늘의 핸드 받기</button>
+    <p class="fine">같은 날, 같은 닉네임이면 결과가 같아요.</p>
+  </section>
+
+  <section id="result" class="panel" hidden aria-labelledby="handName">
+    <div class="hand" id="hand">
+      <p class="row-lbl" id="holeLbl">내 핸드</p>
+      <div class="hole" id="hole" role="list" aria-labelledby="holeLbl"></div>
+      <p class="row-lbl" id="boardLbl">보드</p>
+      <div class="board" id="board" role="list" aria-labelledby="boardLbl"></div>
+    </div>
+    <div class="rank-box">
+      <p class="rank-label">오늘의 핸드</p>
+      <h2 id="handName" class="rank-name"></h2>
+      <p id="rerollNote" class="reroll-note" hidden></p>
+      <div id="explain" class="ex" aria-live="polite">
+        <div class="ex-row">
+          <div class="ex-h"><span class="ex-t">내 핸드 세기</span><span id="exTier" class="ex-pill"></span><span id="exBars" class="ex-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
+          <p class="ex-p"><b id="exName"></b> <span id="exHole"></span></p>
+        </div>
+        <div class="ex-row">
+          <div class="ex-h"><span class="ex-t">보드와 메이드</span><span id="exUse" class="ex-pill"></span></div>
+          <p id="exMade" class="ex-p"></p>
+          <p id="exProg" class="ex-prog"></p>
+        </div>
+      </div>
+      <p id="oneLine" class="one-line"></p>
+    </div>
+
+    <div class="score-card">
+      <div class="ring" id="ring" role="img" aria-label="운세 점수">
+        <span id="score">0</span><small>점</small>
+      </div>
+      <p id="message" class="message"></p>
+    </div>
+
+    <h3 class="sec">핸드 밸런스</h3>
+    <ul class="meters" id="meters"></ul>
+
+
+    <div class="actions">
+      <button id="shareBtn" class="btn primary" type="button">결과 복사하기</button>
+      <div class="sub-acts">
+        <button id="rerollBtn" class="btn ghost" type="button">다시 뽑기</button>
+        <button id="resetBtn" class="btn ghost" type="button">처음으로</button>
+      </div>
+    </div>
+    <p class="fine">재미로 보는 운세예요. 오늘도 좋은 핸드 되세요.</p>
+  </section>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

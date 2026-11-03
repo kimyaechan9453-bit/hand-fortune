@@ -1,0 +1,324 @@
+(function () {
+'use strict';
+var SUITS = ['s', 'h', 'd', 'c'];
+var SUIT_CH = { s: '♠', h: '♥', d: '♦', c: '♣' };
+var RANK_CH = { 11: 'J', 12: 'Q', 13: 'K', 14: 'A', 10: '10' };
+var HAND_NAMES = ['하이카드', '원페어', '투페어', '트리플', '스트레이트', '플러시', '풀하우스', '포카드', '스트레이트 플러시', '로열 플러시'];
+
+/* ---------- seeded PRNG ---------- */
+function hashStr(str) { var h = 1779033703 ^ str.length; for (var i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); } h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return (h ^= h >>> 16) >>> 0; }
+function mulberry32(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+function dealHand(rnd) {
+  var deck = []; SUITS.forEach(function (s) { for (var r = 2; r <= 14; r++) deck.push({ r: r, s: s }); });
+  for (var i = deck.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var t = deck[i]; deck[i] = deck[j]; deck[j] = t; }
+  return deck.slice(0, 7);
+}
+
+/* ---------- evaluator: returns {rank 0-9, name, score[] for tiebreak, used[] indices} ---------- */
+function evaluate5(cards) {
+  var ranks = cards.map(function (c) { return c.r; });
+  var counts = {}; ranks.forEach(function (r) { counts[r] = (counts[r] || 0) + 1; });
+  var groups = Object.keys(counts).map(Number).sort(function (a, b) { return counts[b] - counts[a] || b - a; });
+  var flush = cards.every(function (c) { return c.s === cards[0].s; });
+  var uniq = ranks.slice().sort(function (a, b) { return b - a; }).filter(function (r, i, a) { return a.indexOf(r) === i; });
+  var straightHigh = 0;
+  if (uniq.length === 5) {
+    if (uniq[0] - uniq[4] === 4) straightHigh = uniq[0];
+    else if (uniq.join() === '14,5,4,3,2') straightHigh = 5;
+  }
+  var pattern = groups.map(function (g) { return counts[g]; }).join('');
+  var rank;
+  if (straightHigh && flush) rank = straightHigh === 14 ? 9 : 8;
+  else if (pattern === '41') rank = 7;
+  else if (pattern === '32') rank = 6;
+  else if (flush) rank = 5;
+  else if (straightHigh) rank = 4;
+  else if (pattern === '311') rank = 3;
+  else if (pattern === '221') rank = 2;
+  else if (pattern === '2111') rank = 1;
+  else rank = 0;
+  var used = [];
+  if (rank === 0) used = [ranks.indexOf(uniq[0])];
+  else if ([1, 2, 3, 6, 7].indexOf(rank) >= 0) {
+    ranks.forEach(function (r, i) { if (counts[r] >= 2) used.push(i); });
+  } else used = [0, 1, 2, 3, 4];
+  return { rank: rank, name: HAND_NAMES[rank], tiebreak: straightHigh ? [straightHigh] : groups, used: used };
+}
+function cmp(a, b) {
+  if (a.rank !== b.rank) return a.rank - b.rank;
+  for (var i = 0; i < Math.max(a.tiebreak.length, b.tiebreak.length); i++) { var d = (a.tiebreak[i] || 0) - (b.tiebreak[i] || 0); if (d) return d; }
+  return 0;
+}
+/* best 5 of 5-7 cards; best5 = indices of the 5 chosen cards, used = indices of the cards that form the rank */
+function evaluate(cards) {
+  if (cards.length <= 5) { var r = evaluate5(cards); r.best5 = cards.map(function (_, i) { return i; }); return r; }
+  var best = null, n = cards.length;
+  (function rec(start, idx) {
+    if (idx.length === 5) {
+      var e = evaluate5(idx.map(function (i) { return cards[i]; }));
+      if (!best || cmp(e, best) > 0) { e.best5 = idx.slice(); e.used = e.used.map(function (k) { return idx[k]; }); best = e; }
+      return;
+    }
+    for (var i = start; i < n; i++) rec(i + 1, idx.concat(i));
+  })(0, []);
+  return best;
+}
+
+/* ---------- copy library ---------- */
+var MSG = [
+  ['큰 핸드는 아니어도 하이카드로 이기는 날도 있어요. 무리하지 않고 차분하게 흐름을 보면 충분합니다.', '오늘은 폴드도 좋은 선택이에요. 아낀 에너지는 꼭 필요한 순간에 쓰면 됩니다.', '조용한 핸드일수록 읽을 게 많아요. 주변을 천천히 관찰하는 하루가 되면 좋겠어요.', '평범한 하루가 가장 편안할 때도 있어요. 작은 루틴 하나를 잘 지켜보세요.'],
+  ['작은 페어 하나가 하루를 든든하게 받쳐 줘요. 익숙한 것에서 좋은 기회가 보일 거예요.', '한 가지에 집중하면 결과가 따라오는 날이에요. 할 일을 하나만 골라 끝까지 해 보세요.', '오늘은 짝이 잘 맞는 날이에요. 함께하는 사람과 생각이 잘 통할 수 있어요.', '무난하지만 탄탄한 출발이에요. 서두르지 않으면 충분히 좋은 하루가 됩니다.'],
+  ['두 가지 일이 나란히 잘 풀리는 흐름이에요. 미뤄 둔 일과 새 일을 같이 챙겨 보세요.', '균형 감각이 빛나는 날이에요. 일과 쉼 사이를 잘 나누면 만족도가 높아져요.', '선택지가 두 개라면 둘 다 괜찮아요. 마음이 조금 더 가는 쪽을 골라 보세요.', '차곡차곡 쌓아 온 것들이 보이기 시작해요. 스스로를 한 번 칭찬해 주세요.'],
+  ['세 장이 모인 만큼 존재감이 확실한 날이에요. 내 의견을 편하게 이야기해 보세요.', '준비해 온 일이 힘을 얻는 흐름이에요. 자신감을 가져도 좋아요.', '오늘은 꾸준함이 통하는 날이에요. 한 번 더 해 보는 끈기가 좋은 결과로 이어져요.', '주변의 도움이 자연스럽게 모여요. 고마운 마음은 바로 표현해 보세요.'],
+  ['하나씩 이어지는 연결이 좋은 날이에요. 계획한 순서대로 움직이면 술술 풀려요.', '흐름을 타는 하루예요. 막혔던 일이 의외의 계기로 이어질 수 있어요.', '차근차근 단계를 밟는 힘이 빛나요. 오늘 정한 목표는 생각보다 가까이 있어요.', '앞뒤가 딱 맞아떨어지는 날이에요. 미뤄 둔 정리를 해 두면 마음이 가벼워져요.'],
+  ['다섯 장이 한 색으로 모였어요. 내가 좋아하는 것에 시간을 쓰면 에너지가 차오르는 날이에요.', '분위기가 한 방향으로 잘 모이는 하루예요. 팀 작업이나 모임이 즐거울 거예요.', '취향과 감각이 살아나는 날이에요. 작은 것 하나라도 나답게 골라 보세요.', '일관된 태도가 좋은 인상을 남겨요. 오늘은 내 스타일대로 가도 괜찮아요.'],
+  ['든든함과 즐거움이 함께하는 날이에요. 사람들과 보내는 시간이 특히 좋겠어요.', '꽉 찬 하루가 될 것 같아요. 바쁜 와중에도 잠깐 숨 고를 틈은 꼭 챙겨 주세요.', '안정감 속에 좋은 기회가 들어와요. 반가운 연락이 올 수도 있어요.', '해 온 만큼 돌아오는 날이에요. 오늘의 성과를 기록해 두면 좋아요.'],
+  ['보기 드문 강한 핸드예요. 마음먹었던 일을 시작하기에 좋은 하루예요.', '네 장이 모인 만큼 집중력이 좋아요. 어려워 보였던 일도 한 번 도전해 보세요.', '오늘은 어디서든 존재감이 돋보여요. 그만큼 여유 있는 태도가 더 멋져 보여요.', '기분 좋은 일이 겹치는 날이에요. 좋은 기운을 주변에도 나눠 주세요.'],
+  ['아주 드문 핸드가 들어왔어요. 흐름도 방향도 모두 잘 맞는 하루예요.', '오늘은 하는 일마다 손발이 척척 맞아요. 평소 미뤄 둔 도전을 꺼내 봐도 좋아요.', '이런 날은 자주 오지 않아요. 오늘의 기분 좋은 순간을 사진으로 남겨 두세요.'],
+  ['로열 플러시, 정말 보기 드문 핸드예요. 오늘 하루는 마음껏 웃으셔도 좋아요.', '최고의 핸드가 들어왔어요. 좋은 일이 생기면 고마운 사람에게 먼저 소식을 전해 보세요.', '오늘의 주인공은 바로 나예요. 이 기분 그대로 하루를 즐겨 보세요.']
+];
+var ONE = ['좋은 폴드는 다음 핸드를 위한 준비예요.', '조급할 땐 한 템포 쉬어 가도 괜찮아요.', '오늘의 리뷰가 내일의 실력이 됩니다.', '포지션처럼, 타이밍이 전부일 때가 있어요.', '작은 선택이 모여 좋은 하루를 만들어요.', '내 페이스를 지키는 사람이 결국 웃어요.', '보드는 바뀌어도 내 기본기는 그대로예요.', '가끔은 체크하고 지켜보는 게 정답이에요.', '좋은 핸드는 좋은 기분에서 시작돼요.', '오늘의 나에게 BB 하나만큼의 여유를 주세요.', '오늘 만나는 사람이 좋은 테이블 메이트가 될지도 몰라요.', '정리된 머릿속이 가장 강한 무기예요.'];
+var AREAS = [
+  { s: 's', name: '일 · 집중', hi: ['집중력이 좋은 날이에요. 중요한 일은 오전에 먼저 끝내 보세요.', '머리가 맑은 날이에요. 미뤄 둔 기획이나 공부를 꺼내 보세요.', '판단이 빠르고 정확해요. 결정할 일이 있다면 오늘이 좋아요.'], lo: ['집중이 잘 안 되면 25분 일하고 5분 쉬는 식으로 나눠 보세요.', '할 일 목록을 세 개로 줄이면 훨씬 가벼워져요.', '알림을 잠깐 꺼 두면 생각보다 많은 걸 끝낼 수 있어요.'] },
+  { s: 'h', name: '관계 · 감정', hi: ['마음이 잘 통하는 날이에요. 오랜만에 안부를 전해 보세요.', '따뜻한 말 한마디가 크게 돌아오는 날이에요.', '함께하는 시간이 즐거워요. 가벼운 약속을 잡아 보세요.'], lo: ['감정이 오르내리면 잠깐 산책하며 숨을 골라 보세요.', '오늘은 듣는 쪽에 조금 더 서 보면 좋아요.', '서운한 일이 있어도 하루만 지나고 이야기해 보세요.'] },
+  { s: 'd', name: '성과 · 기회', hi: ['노력한 만큼 인정받기 좋은 날이에요. 결과물을 자신 있게 보여 주세요.', '새로운 제안이나 기회가 눈에 띌 수 있어요. 가볍게 메모해 두세요.', '작은 성과가 이어지는 흐름이에요. 오늘 한 일을 기록해 보세요.'], lo: ['오늘은 새로 벌이기보다 하던 일을 마무리하는 게 좋아요.', '큰 결정은 하루 미뤄도 괜찮아요. 정보를 더 모아 보세요.', '서두르지 않아도 기회는 다시 와요. 준비에 집중해 보세요.'] },
+  { s: 'c', name: '건강 · 활력', hi: ['몸이 가벼운 날이에요. 가볍게 걷거나 스트레칭해 보세요.', '에너지가 넉넉해요. 미뤄 둔 운동을 시작하기 좋아요.', '컨디션이 좋은 만큼 수면 리듬도 잘 챙겨 주세요.'], lo: ['물을 자주 마시고 화면에서 눈을 자주 떼 주세요.', '오늘은 일찍 잠자리에 드는 것만으로도 충분해요.', '긴 세션은 잠시 쉬어 가요. 몸이 먼저입니다.'] }
+];
+
+var CONTRIB = {
+  both: ['내 핸드 두 장이 모두 족보에 들어갔어요.', '내 핸드 두 장이 다 제 몫을 했어요.', '오늘은 내 카드가 핸드의 중심이에요.'],
+  one: ['내 핸드 한 장이 보드와 잘 어울렸어요.', '한 장은 내가, 나머지는 보드가 채웠어요.', '내 카드 한 장이 결정적이었어요.'],
+  none: ['오늘은 보드가 다 해줬어요.', '보드만으로 핸드가 완성됐어요.', '내 카드는 쉬고 보드가 힘을 냈어요.']
+};
+function contribLine(rnd, ev) {
+  var key = ev.rank === 0 ? ev.used : ev.best5;
+  var n = key.filter(function (i) { return i < 2; }).length;
+  if (ev.rank > 0 && ev.rank !== 4 && ev.rank !== 5 && ev.rank < 8) n = ev.used.filter(function (i) { return i < 2; }).length;
+  return pick(rnd, CONTRIB[n === 2 ? 'both' : n === 1 ? 'one' : 'none']);
+}
+/* ---------- 핸드 해설: preflop tier + how the made hand formed ---------- */
+var SH = { 10: 'T', 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
+function sh(r) { return SH[r] || String(r); }
+var TIER_LABEL = ['', '약함', '보통', '괜찮음', '강함', '프리미엄'];
+var TIER_TEXT = ['', '약한 출발이지만 보드가 바꿔 줄 수 있어요.', '평범한 출발이라 보드의 도움이 필요해요.', '흐름을 타면 좋은 핸드예요.', '탄탄하게 출발하는 핸드예요.', '시작부터 가장 강한 축에 드는 핸드예요.'];
+function preflopTier(a, b) {
+  var hi = Math.max(a.r, b.r), lo = Math.min(a.r, b.r), s = a.s === b.s, gap = hi - lo;
+  if (hi === lo) return hi >= 12 ? 5 : hi >= 10 ? 4 : hi >= 7 ? 3 : 2;      // AA-QQ / JJ-TT / 99-77 / 66-22
+  if (hi === 14 && lo === 13) return s ? 5 : 4;                                // AKs / AKo
+  if (s && ((hi === 14 && lo >= 11) || (hi === 13 && lo === 12))) return 4;    // AQs AJs KQs
+  if (lo >= 10) return (s || (hi === 14 && lo >= 11) || (hi === 13 && lo === 12)) ? 3 : 2; // suited/strong broadways vs other offsuit broadways
+  if (s && gap === 1 && lo >= 4) return 3;                                     // 54s-T9s
+  if (s && (hi === 14 || (gap === 2 && lo >= 5))) return 2;                    // suited Ax, suited one-gappers
+  if (!s && gap === 1 && lo >= 7) return 2;                                    // 87o-T9o
+  return 1;
+}
+function preflopInfo(a, b) {
+  var hi = Math.max(a.r, b.r), lo = Math.min(a.r, b.r), s = a.s === b.s, tier = preflopTier(a, b);
+  var name = hi === lo ? '포켓 페어 ' + sh(hi) + sh(hi) : sh(hi) + sh(lo) + (s ? ' 수티드' : ' 오프수트');
+  var extra = hi === lo ? '처음부터 페어를 들고 시작해요.' : s && hi - lo === 1 ? '같은 무늬에 숫자도 붙어 있어 플러시와 스트레이트를 모두 노릴 수 있어요.' : s ? '같은 무늬라 플러시를 노릴 수 있어요.' : hi - lo === 1 ? '숫자가 붙어 있어 스트레이트를 노릴 수 있어요.' : '';
+  return { tier: tier, label: TIER_LABEL[tier], name: name, text: TIER_TEXT[tier] + (extra ? ' ' + extra : '') };
+}
+function hasFlushDraw(cards) { // 4 of a suit, at least one from my hand
+  return SUITS.some(function (su) { var n = cards.filter(function (c) { return c.s === su; }).length; return n === 4 && (cards[0].s === su || cards[1].s === su); });
+}
+function hasStraightDraw(cards) {
+  var set = {}; cards.forEach(function (c) { set[c.r] = 1; if (c.r === 14) set[1] = 1; });
+  for (var lo = 1; lo <= 10; lo++) { var n = 0; for (var r = lo; r < lo + 5; r++) if (set[r]) n++; if (n >= 4) return true; }
+  return false;
+}
+var STREETS = ['플랍', '턴', '리버'];
+function cardTxt(c) { return (RANK_CH[c.r] || String(c.r)) + SUIT_CH[c.s]; }
+function describe(cards) {
+  var ev = evaluate(cards), hole = cards.slice(0, 2), board = cards.slice(2);
+  var bU = board.map(function (c) { return c.r; }).sort(function (x, y) { return y - x; }).filter(function (r, i, a) { return a.indexOf(r) === i; });
+  var hc = function (r) { return hole.filter(function (c) { return c.r === r; }).length; };
+  var t = ev.tiebreak, desc, kind = '';
+  if (ev.rank === 0) { desc = sh(Math.max.apply(null, ev.best5.map(function (i) { return cards[i].r; }))) + ' 하이카드'; }
+  else if (ev.rank === 1) {
+    var p = t[0], n = hc(p);
+    if (n === 2) kind = p > bU[0] ? '오버페어' : '포켓 페어';
+    else if (n === 1) kind = p === bU[0] ? '탑 페어' : p === bU[1] ? '세컨드 페어' : '로우 페어';
+    else kind = '보드 페어';
+    var kk = n === 1 ? ', 키커 ' + sh((hole[0].r === p ? hole[1] : hole[0]).r) : '';
+    desc = kind + '(' + sh(p) + sh(p) + kk + ')';
+  } else if (ev.rank === 2) desc = '투페어(' + sh(t[0]) + sh(t[0]) + sh(t[1]) + sh(t[1]) + ')';
+  else if (ev.rank === 3) { var n3 = hc(t[0]); kind = n3 === 2 ? '셋' : n3 === 1 ? '트립스' : '보드 트리플'; desc = kind + '(' + sh(t[0]) + sh(t[0]) + sh(t[0]) + ')'; }
+  else if (ev.rank === 4) desc = '스트레이트(' + (t[0] === 5 ? 'A' : sh(t[0] - 4)) + '~' + sh(t[0]) + ')';
+  else if (ev.rank === 5) {
+    var su = cards[ev.best5[0]].s, nut = 14;
+    while (board.some(function (c) { return c.s === su && c.r === nut; })) nut--;
+    kind = hole.some(function (c) { return c.s === su && c.r === nut; }) ? '넛 플러시' : '플러시';
+    desc = kind + '(' + SUIT_CH[su] + ')';
+  } else if (ev.rank === 6) desc = '풀하우스(' + sh(t[0]) + sh(t[0]) + sh(t[0]) + sh(t[1]) + sh(t[1]) + ')';
+  else if (ev.rank === 7) desc = '포카드(' + sh(t[0]) + sh(t[0]) + sh(t[0]) + sh(t[0]) + ')';
+  else desc = ev.name;
+  return { ev: ev, kind: kind || ev.name, desc: desc };
+}
+function madeInfo(cards) {
+  var D = describe(cards), ev = D.ev, desc = D.desc;
+  var st = [5, 6, 7].map(function (n) { return evaluate(cards.slice(0, n)); });
+  var at = 0; while (st[at].rank !== ev.rank) at++;
+  var holeUsed = ev.best5.filter(function (i) { return i < 2; }).length;
+  var before = at > 0 && st[at - 1].rank > 0 ? STREETS[at - 1] + '까지는 ' + describe(cards.slice(0, at + 4)).desc + '. ' : '';
+  var where = at === 0 ? '플랍에서 ' : STREETS[at] + '(' + cardTxt(cards[at + 4]) + ')에서 ';
+  var verb = D.kind.indexOf('보드') === 0 ? '가 깔렸어요.' : ' 완성이에요.';
+  var drawNote = '';
+  if (at > 0 && ev.rank === 5 && hasFlushDraw(cards.slice(0, at + 4))) drawNote = ' 플러시 드로우가 완성됐어요.';
+  if (at > 0 && ev.rank === 4 && hasStraightDraw(cards.slice(0, at + 4))) drawNote = ' 스트레이트 드로우가 완성됐어요.';
+  var use = holeUsed === 2 ? '내 카드 2장을 모두 썼어요.' : holeUsed === 1 ? '내 카드 1장을 썼어요.' : '보드 플레이예요. 보드 5장이 그대로 족보예요.';
+  return { kind: D.kind, at: at, holeUsed: holeUsed, boardPlay: holeUsed === 0,
+    text: before + where + desc + verb + drawNote + ' ' + use,
+    steps: st.map(function (e) { return e.name; }), progress: st.map(function (e, i) { return STREETS[i] + ' ' + e.name; }).join(' → ') };
+}
+function explain(cards) { return { hole: preflopInfo(cards[0], cards[1]), made: madeInfo(cards) }; }
+/* ---------- fortune ---------- */
+function todayKey() {
+  try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+  catch (e) { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+}
+function pick(rnd, arr) { return arr[Math.floor(rnd() * arr.length)]; }
+function makeFortune(dateKey, nick, reroll) {
+  reroll = reroll || 0;
+  var rnd = mulberry32(hashStr(dateKey + '|' + (nick || '').trim().toLowerCase() + (reroll ? '|r' + reroll : '')));
+  var cards = dealHand(rnd);
+  var ev = evaluate(cards);
+  var bal = AREAS.map(function (a) {
+    var e = 22;
+    cards.forEach(function (c) { if (c.s === a.s) e += 8 + (c.r - 2) * 1.1; });
+    e += Math.floor(rnd() * 12);
+    e = Math.max(15, Math.min(98, Math.round(e)));
+    return { area: a, value: e, hi: e >= 55, tip: pick(rnd, e >= 55 ? a.hi : a.lo) };
+  });
+  var avg = bal.reduce(function (s, b) { return s + b.value; }, 0) / 4;
+  var high = Math.max.apply(null, ev.best5.map(function (i) { return cards[i]; }).map(function (c) { return c.r; }));
+  var strength = ev.rank === 0 ? (high - 2) / 12 * 0.3 : 0.25 + ev.rank * 0.08;
+  var score = Math.round(Math.max(30, Math.min(100, 30 + strength * 50 + avg * 0.25 + rnd() * 6)));
+  if (ev.rank >= 8) score = Math.max(score, 96);
+  return { date: dateKey, nick: nick, reroll: reroll, cards: cards, ev: ev, bal: bal, score: score,
+    message: pick(rnd, MSG[ev.rank]), contrib: contribLine(rnd, ev), oneLine: pick(rnd, ONE), explain: explain(cards) };
+}
+
+/* ---------- Node export for tests ---------- */
+if (typeof module !== 'undefined' && module.exports) { module.exports = { explain: explain, preflopTier: preflopTier, evaluate: evaluate, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES }; }
+if (typeof document === 'undefined') return;
+
+/* ---------- UI ---------- */
+var $ = function (id) { return document.getElementById(id); };
+var KEY = 'handtalk.fortune.nick';
+var timers = [];
+function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var current = null;
+
+function cardLabel(c) { var n = { 11: '잭', 12: '퀸', 13: '킹', 14: '에이스' }[c.r] || String(c.r); var s = { s: '스페이드', h: '하트', d: '다이아몬드', c: '클로버' }[c.s]; return s + ' ' + n; }
+function cardEl(c, win) {
+  var rk = RANK_CH[c.r] || String(c.r), su = SUIT_CH[c.s], red = c.s === 'h' || c.s === 'd';
+  var d = document.createElement('div'); d.className = 'slot' + (win ? ' win' : ' dim'); d.setAttribute('role', 'listitem'); d.setAttribute('aria-label', cardLabel(c) + (win ? ' (족보 카드)' : ''));
+  return d;
+}
+function faceHTML(c) { return '<div class="face k-' + c.s + '" aria-hidden="true"><span class="r">' + (RANK_CH[c.r] || String(c.r)) + '</span><span class="su">' + SUIT_CH[c.s] + '</span></div>'; }
+// state-driven: a slot holds nothing until dealt; the face DOM exists only after its flip
+function dealCard(slot) {
+  var cd = document.createElement('div'); cd.className = 'cd'; cd.innerHTML = '<div class="bk"></div>'; slot.appendChild(cd);
+  if (reduce || !cd.animate) return;
+  var h = $('hand').getBoundingClientRect(), r = slot.getBoundingClientRect();
+  var dx = (h.left + h.width / 2) - (r.left + r.width / 2), dy = (h.top - 30) - r.top;
+  cd.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(-18deg) scale(.85)', opacity: 0 }, { opacity: 1, offset: .2 }, { transform: 'translate(0,0) rotate(0) scale(1)', opacity: 1 }], { duration: 430, easing: 'cubic-bezier(.15,.8,.25,1)' });
+}
+function flipCard(slot, c) {
+  var cd = slot.querySelector('.cd'); if (!cd) { dealCard(slot); cd = slot.querySelector('.cd'); }
+  if (reduce || !cd.animate) { cd.innerHTML = faceHTML(c); return; }
+  var out = cd.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: 120, easing: 'ease-in', fill: 'forwards' });
+  out.onfinish = function () {
+    cd.innerHTML = faceHTML(c); out.cancel();
+    cd.animate([{ transform: 'scaleX(0) translateY(-3px)' }, { transform: 'scaleX(1)' }], { duration: 170, easing: 'ease-out' });
+  };
+}
+function render(f) {
+  clearTimers();
+  $('hand').classList.remove('done');
+  var hole = $('hole'), board = $('board'); hole.innerHTML = ''; board.innerHTML = '';
+  var slots = f.cards.map(function (c, i) {
+    var el = cardEl(c, f.ev.best5.indexOf(i) >= 0);
+    if (i >= 2) { var w = document.createElement('div'); w.className = 'bslot'; w.appendChild(el); var cue = i === 3 ? '플랍' : i === 5 ? '턴' : i === 6 ? '리버' : ''; var t = document.createElement('span'); t.className = 'cue' + (i < 5 ? ' flop' : ''); t.textContent = cue; t.setAttribute('aria-hidden', 'true'); w.appendChild(t); board.appendChild(w); }
+    else hole.appendChild(el);
+    return el;
+  });
+  var x = f.explain, ex = $('explain'); ex.classList.remove('show');
+  $('exTier').textContent = x.hole.label; $('exTier').className = 'ex-pill t' + x.hole.tier;
+  [].forEach.call($('exBars').children, function (b, i) { b.className = i < x.hole.tier ? 'on' : ''; });
+  $('exName').textContent = x.hole.name; $('exHole').textContent = x.hole.text;
+  $('exUse').textContent = x.made.boardPlay ? '보드 플레이' : '내 카드 ' + x.made.holeUsed + '장 사용'; $('exUse').className = 'ex-pill';
+  $('exMade').textContent = x.made.text; $('exProg').textContent = x.made.progress;
+  var rn = $('rerollNote'); rn.hidden = !f.reroll; rn.textContent = f.reroll ? '다시 뽑은 핸드예요 (' + (f.reroll + 1) + '번째)' : '';
+  $('handName').textContent = f.ev.name; $('oneLine').textContent = '“' + f.oneLine + '”';
+  $('message').textContent = f.message;
+  var ring = $('ring'); ring.setAttribute('aria-label', '운세 점수 ' + f.score + '점');
+  var m = $('meters'); m.innerHTML = '';
+  f.bal.forEach(function (b) {
+    var li = document.createElement('li'); if (b.hi) li.className = 'hi';
+    var red = b.area.s === 'h' || b.area.s === 'd';
+    li.innerHTML = '<div class="mh"><strong><span class="s k-' + b.area.s + '" aria-hidden="true">' + SUIT_CH[b.area.s] + '</span>' + b.area.name + '</strong><em>' + b.value + '</em></div>' +
+      '<div class="bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + b.value + '" aria-label="' + b.area.name + '"><span></span></div><p class="tip">' + b.tip + '</p>';
+    m.appendChild(li);
+  });
+  // hole cards, then flop (3 together-ish), turn, river
+  // [deal, flip] ms: hole 1, hole 2, flop x3 (slide together, flip L->R), turn, river
+  var T = [[0, 450], [250, 700], [1300, 1950], [1420, 2200], [1540, 2450], [3050, 3450], [4050, 4450]];
+  slots.forEach(function (s, i) {
+    if (reduce) { flipCard(s, f.cards[i]); return; }
+    later(function () { dealCard(s); }, T[i][0]); later(function () { flipCard(s, f.cards[i]); }, T[i][1]);
+  });
+  var END = reduce ? 0 : 4950;
+  later(function () { $('hand').classList.add('done'); $('explain').classList.add('show'); }, END);
+  later(function () {
+    m.querySelectorAll('.bar span').forEach(function (sp, i) { sp.style.width = f.bal[i].value + '%'; });
+    var start = null, dur = reduce ? 1 : 900;
+    function tick(t) { if (!start) start = t; var p = Math.min(1, (t - start) / dur); var v = Math.round(f.score * p); $('score').textContent = v; ring.style.setProperty('--p', v); if (p < 1) requestAnimationFrame(tick); }
+    requestAnimationFrame(tick);
+  }, END + 120);
+}
+var RKEY = 'handtalk.fortune.reroll';
+function getReroll(nick) { try { var o = JSON.parse(localStorage.getItem(RKEY) || '{}'); return (o.date === todayKey() && o.nick === nick) ? (o.n || 0) : 0; } catch (e) { return 0; } }
+function setReroll(nick, n) { try { localStorage.setItem(RKEY, JSON.stringify({ date: todayKey(), nick: nick, n: n })); } catch (e) {} }
+var rerollMem = 0;
+function reroll() {
+  if (!current) return;
+  var n = Math.max(getReroll(current.nick), rerollMem) + 1; rerollMem = n; setReroll(current.nick, n);
+  current = makeFortune(todayKey(), current.nick, n);
+  $('result').classList.remove('fade'); void $('result').offsetWidth; $('result').classList.add('fade');
+  render(current); window.scrollTo(0, 0);
+  $('handName').focus({ preventScroll: true });
+}
+function showResult() {
+  var nick = $('nick').value.trim();
+  try { localStorage.setItem(KEY, nick); } catch (e) {}
+  if (!current || current.nick !== nick) rerollMem = 0;
+  current = makeFortune(todayKey(), nick);
+  $('start').hidden = true; $('result').hidden = false; $('result').classList.add('fade');
+  render(current);
+  $('handName').setAttribute('tabindex', '-1'); $('handName').focus({ preventScroll: true });
+  window.scrollTo(0, 0);
+}
+function toast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 1800); }
+function summary(f) {
+  var cc = function (c) { return (RANK_CH[c.r] || c.r) + SUIT_CH[c.s]; }; var cs = '내 핸드 ' + f.cards.slice(0, 2).map(cc).join(' ') + ' | 보드 ' + f.cards.slice(2).map(cc).join(' ');
+  return '[핸드톡] 오늘의 핸드 운세 ' + f.date + (f.nick ? ' · ' + f.nick : '') + (f.reroll ? ' (다시 뽑기 ' + f.reroll + '회)' : '') + '\n' + cs + ' → ' + f.ev.name + ' (' + f.score + '점)\n' +
+    f.bal.map(function (b) { return SUIT_CH[b.area.s] + b.area.name + ' ' + b.value; }).join(' / ') + '\n“' + f.oneLine + '”';
+}
+function copy(text) {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+  return new Promise(function (res, rej) { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy') ? res() : rej(); } catch (e) { rej(e); } document.body.removeChild(ta); });
+}
+document.addEventListener('DOMContentLoaded', function () {
+  var k = todayKey().split('-'); $('date').textContent = k[0] + '년 ' + Number(k[1]) + '월 ' + Number(k[2]) + '일';
+  try { $('nick').value = localStorage.getItem(KEY) || ''; } catch (e) {}
+  $('dealBtn').addEventListener('click', showResult);
+  $('nick').addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
+  $('shareBtn').addEventListener('click', function () { if (!current) return; copy(summary(current)).then(function () { toast('결과를 복사했어요.'); }, function () { toast('복사하지 못했어요. 다시 시도해 주세요.'); }); });
+  $('rerollBtn').addEventListener('click', reroll);
+  $('resetBtn').addEventListener('click', function () { clearTimers(); $('result').hidden = true; $('start').hidden = false; $('dealBtn').focus(); window.scrollTo(0, 0); });
+});
+})();

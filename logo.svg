@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="225 210 585 585" width="1024" height="1024">
+  <defs>
+    <path id="spade" d="M0,-50 C-10,-30 -50,-12 -50,14 C-50,36 -28,46 -10,34 C-12,46 -18,54 -28,60 L28,60 C18,54 12,46 10,34 C28,46 50,36 50,14 C50,-12 10,-30 0,-50Z"/>
+    <g id="club">
+      <circle cx="0" cy="-24" r="22"/><circle cx="-24" cy="12" r="22"/><circle cx="24" cy="12" r="22"/>
+      <path d="M-6,10 L6,10 C8,34 14,48 26,58 L-26,58 C-14,48 -8,34 -6,10Z"/>
+    </g>
+  </defs>
+  <rect x="225" y="210" width="585" height="585" rx="128" fill="#4FA6F5"/>
+  <!-- back card -->
+  <g transform="translate(474,519) rotate(-17)">
+    <rect x="-116" y="-155" width="232" height="310" rx="16" fill="#fff"/>
+    <use xlink:href="#club" fill="#4FA6F5" transform="translate(-78,-108) scale(0.36)"/>
+  </g>
+  <!-- front card -->
+  <g transform="translate(568,519) rotate(16)">
+    <rect x="-116" y="-158" width="232" height="316" rx="16" fill="#fff" stroke="#4FA6F5" stroke-width="9"/>
+    <use xlink:href="#spade" fill="#4FA6F5" transform="translate(-78,-112) scale(0.36)"/>
+    <use xlink:href="#spade" fill="#4FA6F5" transform="translate(0,0) scale(0.95)"/>
+    <use xlink:href="#spade" fill="#4FA6F5" transform="translate(78,112) rotate(180) scale(0.36)"/>
+  </g>
+  <!-- speech bubble -->
+  <circle cx="716" cy="324" r="34" fill="#fff"/>
+  <path d="M694,344 L682,368 L712,352 Z" fill="#fff"/>
+</svg>
