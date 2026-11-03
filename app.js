@@ -115,7 +115,7 @@ function preflopTier(a, b) {
 }
 function preflopInfo(a, b) {
   var hi = Math.max(a.r, b.r), lo = Math.min(a.r, b.r), s = a.s === b.s, tier = preflopTier(a, b);
-  var name = hi === lo ? '포켓 페어 ' + sh(hi) + sh(hi) : sh(hi) + sh(lo) + (s ? ' 수티드' : ' 오프수트');
+  var name = hi === lo ? '포켓 페어 ' + sh(hi) + sh(hi) : sh(hi) + sh(lo) + (s ? ' 수딧' : ' 오프수트');
   var extra = hi === lo ? '처음부터 페어를 들고 시작해요.' : s && hi - lo === 1 ? '같은 무늬에 숫자도 붙어 있어 플러시와 스트레이트를 모두 노릴 수 있어요.' : s ? '같은 무늬라 플러시를 노릴 수 있어요.' : hi - lo === 1 ? '숫자가 붙어 있어 스트레이트를 노릴 수 있어요.' : '';
   return { tier: tier, label: TIER_LABEL[tier], name: name, text: TIER_TEXT[tier] + (extra ? ' ' + extra : '') };
 }
