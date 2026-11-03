@@ -66,7 +66,7 @@
 
 
     <div class="actions">
-      <button id="shareBtn" class="btn primary" type="button">결과 복사하기</button>
+      <button id="shareBtn" class="btn primary" type="button">결과 공유하기</button>
       <div class="sub-acts">
         <button id="rerollBtn" class="btn ghost" type="button">다시 뽑기</button>
         <button id="resetBtn" class="btn ghost" type="button">처음으로</button>
@@ -74,6 +74,14 @@
     </div>
     <p class="fine">재미로 보는 운세예요. 오늘도 좋은 핸드 되세요.</p>
   </section>
+  <div id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-box">
+      <h3 id="sheetTitle" class="sheet-t">공유 이미지</h3>
+      <img id="sheetImg" class="sheet-img" alt="오늘의 핸드 운세 공유 이미지">
+      <a id="saveImg" class="btn primary sheet-btn" href="#">이미지 저장</a>
+      <button id="sheetClose" class="btn ghost" type="button">닫기</button>
+    </div>
+  </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </main>
 <script src="app.js"></script>

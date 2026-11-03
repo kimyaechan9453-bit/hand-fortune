@@ -199,8 +199,12 @@ function makeFortune(dateKey, nick, reroll) {
     message: pick(rnd, MSG[ev.rank]), contrib: contribLine(rnd, ev), oneLine: pick(rnd, ONE), explain: explain(cards) };
 }
 
+/* ---------- share text ---------- */
+function shareText(f, url) { return '오늘 내 핸드는 ' + f.ev.name + ' (' + f.score + '점)! 너도 뽑아 봐 👉 ' + url; }
+function fmtDate(key) { var k = key.split('-'); return k[0] + '년 ' + Number(k[1]) + '월 ' + Number(k[2]) + '일'; }
+
 /* ---------- Node export for tests ---------- */
-if (typeof module !== 'undefined' && module.exports) { module.exports = { explain: explain, preflopTier: preflopTier, evaluate: evaluate, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES }; }
+if (typeof module !== 'undefined' && module.exports) { module.exports = { explain: explain, preflopTier: preflopTier, evaluate: evaluate, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES, shareText: shareText, fmtDate: fmtDate }; }
 if (typeof document === 'undefined') return;
 
 /* ---------- UI ---------- */
@@ -312,12 +316,78 @@ function copy(text) {
   if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
   return new Promise(function (res, rej) { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy') ? res() : rej(); } catch (e) { rej(e); } document.body.removeChild(ta); });
 }
+/* ---------- share image (canvas) ---------- */
+var SUIT_COL = { s: '#191F28', h: '#E74C3C', d: '#3182F6', c: '#00A65A' };
+var FONT = '"Pretendard","Noto Sans KR",system-ui,sans-serif';
+function shareUrl() { return location.origin + location.pathname; }
+function rrect(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }
+function loadLogo() { return new Promise(function (res) { if (location.protocol === 'file:') return res(null); var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = 'logo.svg'; setTimeout(function () { res(null); }, 1500); }); }
+function wrapLines(x, text, maxW) { var out = [], line = ''; text.split(' ').forEach(function (w) { var t = line ? line + ' ' + w : w; if (x.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; }); if (line) out.push(line); return out; }
+function drawCard(x, c, cx, cy, w, h, win) {
+  x.save(); x.globalAlpha = win ? 1 : .45;
+  x.shadowColor = 'rgba(25,31,40,.14)'; x.shadowBlur = w * .18; x.shadowOffsetY = w * .06;
+  rrect(x, cx, cy, w, h, w * .12); x.fillStyle = '#fff'; x.fill(); x.shadowColor = 'transparent';
+  x.lineWidth = w * .055; x.strokeStyle = SUIT_COL[c.s]; rrect(x, cx + x.lineWidth / 2, cy + x.lineWidth / 2, w - x.lineWidth, h - x.lineWidth, w * .1); x.stroke();
+  x.fillStyle = SUIT_COL[c.s]; x.textBaseline = 'top'; x.textAlign = 'left';
+  x.font = '800 ' + Math.round(w * .48) + 'px ' + FONT; x.fillText(RANK_CH[c.r] || String(c.r), cx + w * .09, cy + h * .06);
+  x.textBaseline = 'alphabetic'; x.textAlign = 'right'; x.font = Math.round(w * .55) + 'px ' + FONT; x.fillText(SUIT_CH[c.s], cx + w * .92, cy + h * .93);
+  x.restore();
+}
+function buildShareImage(f) {
+  var ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+  return ready.then(loadLogo).then(function (logo) {
+    var W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H; var x = cv.getContext('2d');
+    x.fillStyle = '#F2F4F6'; x.fillRect(0, 0, W, H);
+    rrect(x, 60, 60, W - 120, H - 120, 48); x.fillStyle = '#fff'; x.fill(); x.strokeStyle = '#E5E8EB'; x.lineWidth = 2; x.stroke();
+    var L = 120;
+    if (logo) x.drawImage(logo, L, 120, 64, 64);
+    x.fillStyle = '#191F28'; x.textAlign = 'left'; x.textBaseline = 'middle'; x.font = '800 40px ' + FONT; x.fillText('핸드톡', L + (logo ? 82 : 0), 152);
+    x.textAlign = 'right'; x.fillStyle = '#8B95A1'; x.font = '500 32px ' + FONT; x.fillText(fmtDate(f.date), W - 120, 152);
+    x.textAlign = 'left'; x.fillStyle = '#191F28'; x.font = '700 56px ' + FONT; x.fillText('오늘의 핸드 운세', L, 250);
+    if (f.nick) { x.fillStyle = '#3182F6'; x.font = '600 34px ' + FONT; x.fillText(f.nick + ' 님의 핸드', L, 312); }
+    rrect(x, 100, 360, W - 200, 560, 32); x.fillStyle = '#F9FAFB'; x.fill(); x.strokeStyle = '#E5E8EB'; x.stroke();
+    x.fillStyle = '#3182F6'; x.font = '700 30px ' + FONT; x.textAlign = 'center'; x.fillText('내 핸드', W / 2, 410);
+    var hw = 150, hh = 214, gap = 20; f.cards.slice(0, 2).forEach(function (c, i) { drawCard(x, c, W / 2 - hw - gap / 2 + i * (hw + gap), 440, hw, hh, f.ev.best5.indexOf(i) >= 0); });
+    x.fillStyle = '#3182F6'; x.fillText('보드', W / 2, 692);
+    var bw = 140, bh = 200 * .78, bg = 16, bwid = 5 * (bw * .78) + 4 * bg; bw = bw * .78; bh = bw * 78 / 54;
+    f.cards.slice(2).forEach(function (c, i) { drawCard(x, c, W / 2 - bwid / 2 + i * (bw + bg), 720, bw, bh, f.ev.best5.indexOf(i + 2) >= 0); });
+    x.fillStyle = '#8B95A1'; x.font = '500 30px ' + FONT; x.fillText('오늘의 핸드', W / 2, 985);
+    x.fillStyle = '#3182F6'; x.font = '800 84px ' + FONT; x.fillText(f.ev.name, W / 2, 1060);
+    x.fillStyle = '#191F28'; x.font = '800 52px ' + FONT; x.fillText(f.score + '점', W / 2, 1135);
+    x.fillStyle = '#4E5968'; x.font = '500 34px ' + FONT;
+    wrapLines(x, '“' + f.oneLine + '”', W - 280).slice(0, 2).forEach(function (l, i) { x.fillText(l, W / 2, 1195 + i * 46); });
+    x.fillStyle = '#8B95A1'; x.font = '500 28px ' + FONT; x.fillText(shareUrl().replace(/^https?:\/\//, ''), W / 2, 1262);
+    return new Promise(function (res) { cv.toBlob(function (b) { res({ canvas: cv, blob: b }); }, 'image/png'); });
+  });
+}
+window.__buildShareImage = function () { return current ? buildShareImage(current).then(function (r) { return r.canvas.toDataURL('image/png'); }) : Promise.resolve(null); };
+function showSheet(url) {
+  var sh = $('sheet'); $('sheetImg').src = url; var a = $('saveImg'); a.href = url; a.download = 'handtalk-' + (current ? current.date : 'today') + '.png';
+  sh.hidden = false; $('sheetClose').focus();
+}
+var sharing = false;
+function shareResult() {
+  if (!current || sharing) return; sharing = true;
+  var f = current, url = shareUrl(), text = shareText(f, url);
+  buildShareImage(f).then(function (r) {
+    var file = null;
+    try { if (r.blob && typeof File === 'function') file = new File([r.blob], 'handtalk-' + f.date + '.png', { type: 'image/png' }); } catch (e) {}
+    if (file && navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) return navigator.share({ files: [file], text: text, url: url });
+    if (navigator.share) return navigator.share({ text: text, url: url });
+    showSheet(r.canvas.toDataURL('image/png'));
+    return copy(text).then(function () { toast('링크를 복사했어요'); }, function () { toast('이미지를 저장해 공유해 보세요'); });
+  }).catch(function (e) { if (!e || e.name !== 'AbortError') toast('공유하지 못했어요. 다시 시도해 주세요.'); })
+    .then(function () { sharing = false; });
+}
 document.addEventListener('DOMContentLoaded', function () {
   var k = todayKey().split('-'); $('date').textContent = k[0] + '년 ' + Number(k[1]) + '월 ' + Number(k[2]) + '일';
   try { $('nick').value = localStorage.getItem(KEY) || ''; } catch (e) {}
   $('dealBtn').addEventListener('click', showResult);
   $('nick').addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
-  $('shareBtn').addEventListener('click', function () { if (!current) return; copy(summary(current)).then(function () { toast('결과를 복사했어요.'); }, function () { toast('복사하지 못했어요. 다시 시도해 주세요.'); }); });
+  $('shareBtn').addEventListener('click', function () { try { shareResult(); } catch (e) { sharing = false; toast('공유하지 못했어요. 다시 시도해 주세요.'); } });
+  $('sheetClose').addEventListener('click', function () { $('sheet').hidden = true; $('shareBtn').focus(); });
+  $('sheet').addEventListener('click', function (e) { if (e.target === $('sheet')) $('sheet').hidden = true; });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') $('sheet').hidden = true; });
   $('rerollBtn').addEventListener('click', reroll);
   $('resetBtn').addEventListener('click', function () { clearTimers(); $('result').hidden = true; $('start').hidden = false; $('dealBtn').focus(); window.scrollTo(0, 0); });
 });

@@ -96,3 +96,10 @@ background:radial-gradient(closest-side,#F9FAFB 78%,transparent 79%),conic-gradi
 .ex-p{margin:0;font-size:13.5px;line-height:1.55;color:#333D4B}.ex-p b{color:var(--fg)}
 .ex-prog{margin:6px 0 0;font-size:12px;color:var(--mut)}
 @media (prefers-reduced-motion:reduce){.ex{transition:none}}
+
+.sheet{position:fixed;inset:0;background:rgba(25,31,40,.5);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+.sheet[hidden]{display:none}
+.sheet-box{width:100%;max-width:430px;background:#fff;border-radius:var(--r-xl) var(--r-xl) 0 0;padding:20px 16px calc(16px + env(safe-area-inset-bottom));display:grid;gap:8px}
+.sheet-t{margin:0 0 4px;font-size:16px;font-weight:700}
+.sheet-img{width:100%;max-height:56vh;object-fit:contain;border-radius:var(--r-md);border:1px solid var(--border);background:#F2F4F6}
+.sheet-btn{display:block;text-align:center;text-decoration:none;box-sizing:border-box}
