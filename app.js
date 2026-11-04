@@ -9,14 +9,40 @@ var HAND_NAMES = ['하이카드', '원페어', '투페어', '트리플', '스트
 function hashStr(str) { var h = 1779033703 ^ str.length; for (var i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); } h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return (h ^= h >>> 16) >>> 0; }
 function mulberry32(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
+// target odds by hand rank (1 원페어 ... 9 로열 플러시); boosted vs real hold'em, never 하이카드
+var RANK_WEIGHTS = [0, 30, 28, 13, 10, 8, 7, 3, 0.8, 0.2];
+function pickRank(rnd) {
+  var tot = RANK_WEIGHTS.reduce(function (x, y) { return x + y; }, 0), x = rnd() * tot;
+  for (var i = 1; i < RANK_WEIGHTS.length; i++) { x -= RANK_WEIGHTS[i]; if (x < 0) return i; }
+  return 1;
+}
 function dealHand(rnd) {
+  var target = pickRank(rnd), best = null, bestRank = -1;
   var deck = []; SUITS.forEach(function (s) { for (var r = 2; r <= 14; r++) deck.push({ r: r, s: s }); });
-  // only deal playable starting hands (tier 2+); reshuffle otherwise
-  for (var k = 0; k < 500; k++) {
-    for (var i = deck.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var t = deck[i]; deck[i] = deck[j]; deck[j] = t; }
-    if (preflopTier(deck[0], deck[1]) >= 2) break;
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  if (target >= 8) { // straight / royal flush are too rare to find by reshuffling, so build them
+    for (var q = 0; q < 200; q++) {
+      shuffle(deck);
+      var su = deck[0].s, high = target === 9 ? 14 : 6 + Math.floor(rnd() * 8); // SF high 6..13
+      var sf = []; for (var r = high - 4; r <= high; r++) sf.push({ r: r, s: su });
+      var p = 1 + Math.floor(rnd() * 3); // hole = two adjacent SF cards, not the lowest pair
+      var hole = [sf[p], sf[p + 1]];
+      var rest = sf.filter(function (c, i) { return i !== p && i !== p + 1; });
+      var others = deck.filter(function (c) { return !sf.some(function (x) { return x.r === c.r && x.s === c.s; }); });
+      var board = shuffle(rest.concat(others.slice(0, 2)));
+      var built = shuffle(hole).concat(board);
+      if (preflopTier(built[0], built[1]) >= 2 && evaluate(built).rank === target) return built;
+    }
   }
-  return deck.slice(0, 7);
+  // shuffle like a real deal (hole 2, flop 3, turn, river) until the hand fits: playable hole cards (tier 2+) and the target rank
+  for (var k = 0; k < 300000; k++) {
+    shuffle(deck);
+    if (preflopTier(deck[0], deck[1]) < 2) continue;
+    var cards = deck.slice(0, 7), rk = evaluate(cards).rank;
+    if (rk === target) return cards;
+    if (rk >= 1 && (bestRank < 1 || Math.abs(rk - target) < Math.abs(bestRank - target))) { best = cards; bestRank = rk; }
+  }
+  return best || deck.slice(0, 7);
 }
 
 /* ---------- evaluator: returns {rank 0-9, name, score[] for tiebreak, used[] indices} ---------- */
