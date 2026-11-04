@@ -314,6 +314,7 @@ function render(f) {
   });
   var x = f.explain, ex = $('explain'); ex.classList.remove('show');
   $('exTier').textContent = x.hole.label; $('exTier').className = 'ex-pill t' + x.hole.tier;
+  $('exBars').className = 'ex-bars t' + x.hole.tier;
   [].forEach.call($('exBars').children, function (b, i) { b.className = i < x.hole.tier ? 'on' : ''; });
   $('exName').textContent = x.hole.name; $('exHole').textContent = x.hole.text;
   var rn = $('rerollNote'); rn.hidden = !f.reroll; rn.textContent = f.reroll ? '다시 뽑은 핸드예요 (' + (f.reroll + 1) + '번째)' : '';
