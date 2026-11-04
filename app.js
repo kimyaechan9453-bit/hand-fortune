@@ -319,12 +319,13 @@ function makeFortune(dateKey, nick, reroll) {
   });
   var avg = bal.reduce(function (s, b) { return s + b.value; }, 0) / 4;
   var high = Math.max.apply(null, ev.best5.map(function (i) { return cards[i]; }).map(function (c) { return c.r; }));
-  var strength = ev.rank === 0 ? (high - 2) / 12 * 0.3 : 0.25 + ev.rank * 0.08;
-  var score = Math.round(Math.max(30, Math.min(100, 30 + strength * 50 + avg * 0.25 + rnd() * 6)));
-  if (ev.rank >= 8) score = Math.max(score, 96);
+  // score band follows the final hand grade: B 60-70, A 70-80, S 80-90, R 90-100
+  var xp = explain(cards), ft = xp.fin.tier, lo = ft >= 5 ? 90 : ft === 4 ? 80 : ft === 3 ? 70 : 60;
+  var frac = Math.max(0, Math.min(1, rnd() * 0.65 + ((avg - 25) / 50) * 0.35));
+  var score = lo + Math.round(frac * 10);
   if (ev.rank === 9) score = 100;
   return { date: dateKey, nick: nick, reroll: reroll, cards: cards, ev: ev, bal: bal, score: score,
-    message: pick(rnd, MSG[ev.rank]), contrib: contribLine(rnd, ev), oneLine: pick(rnd, ONE), explain: explain(cards) };
+    message: pick(rnd, MSG[ev.rank]), contrib: contribLine(rnd, ev), oneLine: pick(rnd, ONE), explain: xp };
 }
 
 /* ---------- share text ---------- */
@@ -395,6 +396,10 @@ function render(f) {
   var m = $('meters'); m.innerHTML = '';
   f.bal.forEach(function (b) {
     var li = document.createElement('li'); if (b.hi) li.className = 'hi';
+    li.tabIndex = 0; li.setAttribute('aria-expanded', 'false');
+    li.onclick = li.onkeydown = function (e) { if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return; if (e.type === 'keydown') e.preventDefault();
+      var open = !li.classList.contains('open'); [].forEach.call(m.children, function (o) { o.classList.remove('open'); o.setAttribute('aria-expanded', 'false'); });
+      if (open) { li.classList.add('open'); li.setAttribute('aria-expanded', 'true'); } };
     var red = b.area.s === 'h' || b.area.s === 'd';
     li.innerHTML = '<div class="mh"><strong><span class="s k-' + b.area.s + '" aria-hidden="true">' + SUIT_CH[b.area.s] + '</span>' + b.area.name + '</strong><em>' + b.value + '</em></div>' +
       '<div class="bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + b.value + '" aria-label="' + b.area.name + '"><span></span></div><p class="tip">' + b.tip + '</p>';
@@ -485,7 +490,16 @@ function buildShareImage(f) {
     f.cards.slice(2).forEach(function (c, i) { drawCard(x, c, W / 2 - bwid / 2 + i * (bw + bg), 720, bw, bh, f.ev.best5.indexOf(i + 2) >= 0); });
     x.fillStyle = '#8B95A1'; x.font = '500 30px ' + FONT; x.fillText('오늘의 핸드', W / 2, 985);
     x.fillStyle = '#3182F6'; x.font = '800 84px ' + FONT; x.fillText(f.ev.name, W / 2, 1060);
-    x.fillStyle = '#191F28'; x.font = '800 52px ' + FONT; x.fillText(f.score + '점', W / 2, 1135);
+    var TC = { 5: ['#7C4DFF', '#fff'], 4: ['#3182F6', '#fff'], 3: ['#00C471', '#fff'], 2: ['#FFB800', '#191F28'] };
+    var pills = [['프리플랍 ' + f.explain.hole.label, f.explain.hole.tier], ['최종 ' + f.explain.fin.label, f.explain.fin.tier]];
+    x.font = '800 52px ' + FONT; var sw = x.measureText(f.score + '점').width;
+    x.font = '700 30px ' + FONT; var pw = pills.map(function (p) { return x.measureText(p[0]).width + 44; });
+    var gx = 24, tot = sw + gx + pw[0] + 12 + pw[1], cx0 = W / 2 - tot / 2;
+    x.textAlign = 'left'; x.fillStyle = '#191F28'; x.font = '800 52px ' + FONT; x.fillText(f.score + '점', cx0, 1135);
+    var px = cx0 + sw + gx;
+    pills.forEach(function (p, i) { var c = TC[Math.max(2, p[1])]; rrect(x, px, 1135 - 26, pw[i], 52, 26); x.fillStyle = c[0]; x.fill();
+      x.fillStyle = c[1]; x.font = '700 30px ' + FONT; x.textAlign = 'center'; x.fillText(p[0], px + pw[i] / 2, 1136); px += pw[i] + 12; });
+    x.textAlign = 'center';
     x.fillStyle = '#4E5968'; x.font = '500 34px ' + FONT;
     wrapLines(x, '“' + f.oneLine + '”', W - 280).slice(0, 2).forEach(function (l, i) { x.fillText(l, W / 2, 1195 + i * 46); });
     x.fillStyle = '#8B95A1'; x.font = '500 28px ' + FONT; x.fillText(shareUrl().replace(/^https?:\/\//, ''), W / 2, 1262);

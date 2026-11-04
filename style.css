@@ -119,3 +119,13 @@ body.fx-flash::after{content:"";position:fixed;inset:0;pointer-events:none;z-ind
 @keyframes flash{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
 .hand.shake{animation:shake .5s ease-in-out}
 @keyframes shake{0%,100%{transform:none}20%{transform:translateX(-5px) rotate(-.5deg)}40%{transform:translateX(5px) rotate(.5deg)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+
+/* compact balance: 2x2, tip shown on tap */
+.meters{grid-template-columns:1fr 1fr;gap:8px}
+.meters li{padding:10px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.meters .mh{font-size:13px;margin-bottom:6px}
+.meters .tip{display:none;margin-top:6px;font-size:12.5px}
+.meters li.open{grid-column:1/-1}
+.meters li.open .tip{display:block}
+.meters li .mh strong::after{content:"";}
+.sec-hint{font-size:12px;font-weight:500;color:var(--mut);margin-left:6px}
