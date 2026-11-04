@@ -103,3 +103,8 @@ background:radial-gradient(closest-side,#F9FAFB 78%,transparent 79%),conic-gradi
 .sheet-t{margin:0 0 4px;font-size:16px;font-weight:700}
 .sheet-img{width:100%;max-height:56vh;object-fit:contain;border-radius:var(--r-md);border:1px solid var(--border);background:#F2F4F6}
 .sheet-btn{display:block;text-align:center;text-decoration:none;box-sizing:border-box}
+
+/* hide results until all cards are dealt */
+#result .rank-name,#result .reroll-note,#result .one-line,#result .score-card,#result .sec,#result .meters{transition:opacity .35s ease}
+#result.dealing .rank-name{color:#8B95A1;font-size:18px}
+#result.dealing .reroll-note,#result.dealing .one-line,#result.dealing .score-card,#result.dealing .sec,#result.dealing .meters{opacity:0;pointer-events:none}

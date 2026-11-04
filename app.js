@@ -257,7 +257,8 @@ function render(f) {
   $('exUse').textContent = x.made.boardPlay ? '보드 플레이' : '내 카드 ' + x.made.holeUsed + '장 사용'; $('exUse').className = 'ex-pill';
   $('exMade').textContent = x.made.text; $('exProg').textContent = x.made.progress;
   var rn = $('rerollNote'); rn.hidden = !f.reroll; rn.textContent = f.reroll ? '다시 뽑은 핸드예요 (' + (f.reroll + 1) + '번째)' : '';
-  $('handName').textContent = f.ev.name; $('oneLine').textContent = '“' + f.oneLine + '”';
+  var res = $('result'); res.classList.add('dealing'); $('shareBtn').disabled = true;
+  $('handName').textContent = '카드를 받는 중…'; $('oneLine').textContent = '“' + f.oneLine + '”';
   $('message').textContent = f.message;
   var ring = $('ring'); ring.setAttribute('aria-label', '운세 점수 ' + f.score + '점');
   var m = $('meters'); m.innerHTML = '';
@@ -276,7 +277,7 @@ function render(f) {
     later(function () { dealCard(s); }, T[i][0]); later(function () { flipCard(s, f.cards[i]); }, T[i][1]);
   });
   var END = reduce ? 0 : 4950;
-  later(function () { $('hand').classList.add('done'); $('explain').classList.add('show'); }, END);
+  later(function () { $('handName').textContent = f.ev.name; res.classList.remove('dealing'); $('shareBtn').disabled = false; $('hand').classList.add('done'); $('explain').classList.add('show'); }, END);
   later(function () {
     m.querySelectorAll('.bar span').forEach(function (sp, i) { sp.style.width = f.bal[i].value + '%'; });
     var start = null, dur = reduce ? 1 : 900;
