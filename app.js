@@ -101,7 +101,7 @@ function contribLine(rnd, ev) {
 var SH = { 10: 'T', 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
 function sh(r) { return SH[r] || String(r); }
 var TIER_LABEL = ['', '약함', '보통', '괜찮음', '강함', '프리미엄'];
-var TIER_TEXT = ['', '약한 출발이지만 보드가 바꿔 줄 수 있어요.', '평범한 출발이라 보드의 도움이 필요해요.', '흐름을 타면 좋은 핸드예요.', '탄탄하게 출발하는 핸드예요.', '시작부터 가장 강한 축에 드는 핸드예요.'];
+var TIER_TEXT = ['', '시작은 조금 약한 편이에요.', '무난한 시작 핸드예요. 보드가 조금 도와주면 충분히 해볼 만해요.', '괜찮은 시작 핸드예요. 보드와 잘 맞으면 크게 갈 수 있어요.', '탄탄한 시작 핸드예요. 높은 카드끼리라 페어만 맞아도 든든해요.', '누구나 받고 싶어 하는 최상급 시작 핸드예요.'];
 function preflopTier(a, b) {
   var hi = Math.max(a.r, b.r), lo = Math.min(a.r, b.r), s = a.s === b.s, gap = hi - lo;
   if (hi === lo) return hi >= 12 ? 5 : hi >= 10 ? 4 : hi >= 7 ? 3 : 2;      // AA-QQ / JJ-TT / 99-77 / 66-22
@@ -116,7 +116,20 @@ function preflopTier(a, b) {
 function preflopInfo(a, b) {
   var hi = Math.max(a.r, b.r), lo = Math.min(a.r, b.r), s = a.s === b.s, tier = preflopTier(a, b);
   var name = hi === lo ? '포켓 페어 ' + sh(hi) + sh(hi) : sh(hi) + sh(lo) + (s ? ' 수딧' : ' 오프수트');
-  var extra = hi === lo ? '처음부터 페어를 들고 시작해요.' : s && hi - lo === 1 ? '같은 무늬에 숫자도 붙어 있어 플러시와 스트레이트를 모두 노릴 수 있어요.' : s ? '같은 무늬라 플러시를 노릴 수 있어요.' : hi - lo === 1 ? '숫자가 붙어 있어 스트레이트를 노릴 수 있어요.' : '';
+  var gap = hi - lo, extra = '';
+  if (hi === lo) {
+    var PT = hi === 14 ? '홀덤에서 가장 강한 시작 핸드예요. 받는 순간부터 기분 좋은 카드죠.'
+      : hi >= 12 ? '최상위권 포켓 페어예요. 웬만한 상황에서는 자신 있게 밀고 갈 수 있어요.'
+      : hi >= 10 ? '충분히 강한 포켓 페어예요. 다만 보드에 더 높은 카드가 깔리면 조심해야 해요.'
+      : hi >= 7 ? '중간 크기의 포켓 페어예요. 보드에서 같은 숫자가 하나 더 나오면 셋이 돼요.'
+      : '작은 포켓 페어예요. 셋을 맞히면 단번에 판이 뒤집혀요.';
+    return { tier: tier, label: TIER_LABEL[tier], name: name, text: PT };
+  }
+  if (s && gap === 1) extra = '같은 무늬에 숫자까지 이어져 있어서 플러시와 스트레이트를 둘 다 노려볼 수 있어요.';
+  else if (s) extra = '같은 무늬라 플러시를 노려볼 수 있어요.';
+  else if (gap === 1) extra = '숫자가 이어져 있어서 스트레이트를 노려볼 수 있어요.';
+  else if (hi === 14 && tier <= 3) extra = '그래도 에이스가 있어서 에이스 페어가 맞으면 해볼 만해요.';
+  if (tier === 1) extra = extra ? (extra.indexOf('그래도') === 0 ? extra : '그래도 ' + extra) : '그래도 보드가 어떻게 깔리느냐에 따라 얼마든지 달라질 수 있어요.';
   return { tier: tier, label: TIER_LABEL[tier], name: name, text: TIER_TEXT[tier] + (extra ? ' ' + extra : '') };
 }
 function hasFlushDraw(cards) { // 4 of a suit, at least one from my hand
@@ -254,8 +267,6 @@ function render(f) {
   $('exTier').textContent = x.hole.label; $('exTier').className = 'ex-pill t' + x.hole.tier;
   [].forEach.call($('exBars').children, function (b, i) { b.className = i < x.hole.tier ? 'on' : ''; });
   $('exName').textContent = x.hole.name; $('exHole').textContent = x.hole.text;
-  $('exUse').textContent = x.made.boardPlay ? '보드 플레이' : '내 카드 ' + x.made.holeUsed + '장 사용'; $('exUse').className = 'ex-pill';
-  $('exMade').textContent = x.made.text; $('exProg').textContent = x.made.progress;
   var rn = $('rerollNote'); rn.hidden = !f.reroll; rn.textContent = f.reroll ? '다시 뽑은 핸드예요 (' + (f.reroll + 1) + '번째)' : '';
   var res = $('result'); res.classList.add('dealing'); $('shareBtn').disabled = true;
   $('handName').textContent = '카드를 받는 중…'; $('oneLine').textContent = '“' + f.oneLine + '”';
