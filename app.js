@@ -128,8 +128,8 @@ function preflopInfo(a, b) {
   if (s && gap === 1) extra = '같은 무늬에 숫자까지 이어져 있어서 플러시와 스트레이트를 둘 다 노려볼 수 있어요.';
   else if (s) extra = '같은 무늬라 플러시를 노려볼 수 있어요.';
   else if (gap === 1) extra = '숫자가 이어져 있어서 스트레이트를 노려볼 수 있어요.';
-  else if (hi === 14 && tier <= 3) extra = '그래도 에이스가 있어서 에이스 페어가 맞으면 해볼 만해요.';
-  if (tier === 1) extra = extra ? (extra.indexOf('그래도') === 0 ? extra : '그래도 ' + extra) : '그래도 보드가 어떻게 깔리느냐에 따라 얼마든지 달라질 수 있어요.';
+  else if (hi === 14 && tier <= 3) extra = '에이스가 있어서 에이스 페어가 맞으면 든든해요.';
+  if (tier === 1) extra = extra ? '그래도 ' + extra.replace('든든해요.', '해볼 만해요.') : '그래도 보드가 어떻게 깔리느냐에 따라 얼마든지 달라질 수 있어요.';
   return { tier: tier, label: TIER_LABEL[tier], name: name, text: TIER_TEXT[tier] + (extra ? ' ' + extra : '') };
 }
 function hasFlushDraw(cards) { // 4 of a suit, at least one from my hand
