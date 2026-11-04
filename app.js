@@ -17,6 +17,11 @@ function pickRank(rnd) {
   return 1;
 }
 function dealHand(rnd) {
+  var c = dealRaw(rnd);
+  if (c[1].r > c[0].r) { var t = c[0]; c[0] = c[1]; c[1] = t; } // higher hole card on the left
+  return c;
+}
+function dealRaw(rnd) {
   var target = pickRank(rnd), best = null, bestRank = -1;
   var deck = []; SUITS.forEach(function (s) { for (var r = 2; r <= 14; r++) deck.push({ r: r, s: s }); });
   function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
