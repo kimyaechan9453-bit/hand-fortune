@@ -315,9 +315,9 @@ function todayKey() {
   catch (e) { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
 }
 function pick(rnd, arr) { return arr[Math.floor(rnd() * arr.length)]; }
-function makeFortune(dateKey, nick, reroll) {
+function makeFortune(dateKey, nick, reroll, dev) {
   reroll = reroll || 0;
-  var rnd = mulberry32(hashStr(dateKey + '|' + (nick || '').trim().toLowerCase() + (reroll ? '|r' + reroll : '')));
+  var rnd = mulberry32(hashStr(dateKey + '|' + (nick || '').trim().toLowerCase() + (dev ? '|d' + dev : '') + (reroll ? '|r' + reroll : '')));
   var cards = dealHand(rnd);
   var ev = evaluate(cards);
   var bal = AREAS.map(function (a) {
@@ -349,6 +349,17 @@ if (typeof document === 'undefined') return;
 /* ---------- UI ---------- */
 var $ = function (id) { return document.getElementById(id); };
 var KEY = 'handtalk.fortune.nick';
+var DKEY = 'handtalk.fortune.device';
+var DEV = (function () {
+  var d = '';
+  try { d = localStorage.getItem(DKEY) || ''; } catch (e) {}
+  if (!d) {
+    try { var a = new Uint32Array(2); crypto.getRandomValues(a); d = a[0].toString(36) + a[1].toString(36); }
+    catch (e) { d = Math.random().toString(36).slice(2) + Date.now().toString(36); }
+    try { localStorage.setItem(DKEY, d); } catch (e) {}
+  }
+  return d;
+})();
 var timers = [];
 function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
 function clearTimers() { timers.forEach(clearTimeout); timers = []; }
@@ -438,7 +449,7 @@ var rerollMem = 0;
 function reroll() {
   if (!current) return;
   var n = Math.max(getReroll(current.nick), rerollMem) + 1; rerollMem = n; setReroll(current.nick, n);
-  current = makeFortune(todayKey(), current.nick, n);
+  current = makeFortune(todayKey(), current.nick, n, DEV);
   $('result').classList.remove('fade'); void $('result').offsetWidth; $('result').classList.add('fade');
   render(current); window.scrollTo(0, 0);
   $('handName').focus({ preventScroll: true });
@@ -447,7 +458,7 @@ function showResult() {
   var nick = $('nick').value.trim();
   try { localStorage.setItem(KEY, nick); } catch (e) {}
   if (!current || current.nick !== nick) rerollMem = 0;
-  current = makeFortune(todayKey(), nick);
+  current = makeFortune(todayKey(), nick, 0, DEV);
   $('start').hidden = true; $('result').hidden = false; $('result').classList.add('fade');
   render(current);
   $('handName').setAttribute('tabindex', '-1'); $('handName').focus({ preventScroll: true });
