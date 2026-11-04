@@ -51,7 +51,7 @@ input:focus{outline:2px solid var(--primary);outline-offset:0;background:#fff}
 .face,.cd .bk{position:absolute;inset:0;border-radius:var(--r-sm)}
 .cd .bk{background:repeating-linear-gradient(45deg,var(--primary) 0 4px,var(--blue2) 4px 8px);border:3px solid #fff;box-shadow:0 4px 10px rgba(49,130,246,.25)}
 .face{background:#FFFFFF!important;background-color:#FFFFFF!important;border:3.5px solid currentColor;box-sizing:border-box;box-shadow:0 2px 6px rgba(0,0,0,.08)}
-.k-s{color:#191F28!important}.k-h{color:#E74C3C!important}.k-d{color:#F08C00!important}.k-c{color:#00A65A!important}
+.k-s{color:#191F28!important}.k-h{color:#E74C3C!important}.k-d{color:#3182F6!important}.k-c{color:#00A65A!important}
 .rank-box{text-align:center}
 .rank-label{margin:0;color:var(--mut);font-size:13px}
 .rank-name{margin:4px 0 6px;font-size:28px;color:var(--primary);font-weight:800}

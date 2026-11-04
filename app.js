@@ -484,7 +484,7 @@ function copy(text) {
   return new Promise(function (res, rej) { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy') ? res() : rej(); } catch (e) { rej(e); } document.body.removeChild(ta); });
 }
 /* ---------- share image (canvas) ---------- */
-var SUIT_COL = { s: '#191F28', h: '#E74C3C', d: '#F08C00', c: '#00A65A' };
+var SUIT_COL = { s: '#191F28', h: '#E74C3C', d: '#3182F6', c: '#00A65A' };
 var FONT = '"Pretendard","Noto Sans KR",system-ui,sans-serif';
 function shareUrl() { return location.origin + location.pathname; }
 function rrect(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }
