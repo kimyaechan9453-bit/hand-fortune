@@ -164,7 +164,7 @@ function preflopTier(a, b) {
 }
 function preflopInfo(a, b) {
   var hi = Math.max(a.r, b.r), lo = Math.min(a.r, b.r), s = a.s === b.s, tier = preflopTier(a, b);
-  var name = hi === lo ? '포켓 페어 ' + sh(hi) + sh(hi) : sh(hi) + sh(lo) + (s ? ' 수딧' : ' 오프수트');
+  var name = hi === lo ? '포켓 페어 ' + sh(hi) + sh(hi) : sh(hi) + sh(lo) + (s ? ' 수딧' : ' 옵숫');
   var gap = hi - lo, extra = '';
   if (hi === lo) {
     var PT = hi === 14 ? '홀덤에서 가장 강한 시작 핸드예요. 받는 순간부터 기분 좋은 카드죠.'
@@ -257,6 +257,10 @@ function madeGradeBase(cards) {
   var bU = board.map(function (c) { return c.r; }).sort(function (x, y) { return y - x; }).filter(function (r, i, a) { return a.indexOf(r) === i; });
   var used = ev.best5.filter(function (i) { return i < 2; }).length;
   var hc = function (r) { return hole.filter(function (c) { return c.r === r; }).length; };
+  var made = ev.rank === 2 ? [t[0], t[1]] : [t[0]];
+  var kickers = hole.filter(function (c, i) { return ev.best5.indexOf(i) >= 0 && made.indexOf(c.r) < 0; });
+  var kr = kickers.length ? Math.max.apply(null, kickers.map(function (c) { return c.r; })) : 0;
+  var kickTxt = kr ? '키커 ' + sh(kr) + (kr === 3 || kr === 6 ? '으로' : '로') + ' 승부가 갈려요.' : '';
   if (used === 0) return [ev.rank >= 7 ? 4 : 2, '보드 다섯 장이 그대로 족보라 상대도 같은 족보를 갖고 있어요.'];
   switch (ev.rank) {
     case 1:
@@ -266,15 +270,21 @@ function madeGradeBase(cards) {
         return kick >= 11 ? [3, '보드에서 가장 높은 카드와 맞은 데다 키커까지 좋아요.'] : [3, '보드에서 가장 높은 카드와 맞았어요. 키커가 조금 아쉽지만 충분히 강해요.'];
       }
       if (D.kind === '세컨드 페어') return [2, '두 번째로 높은 카드와 맞았어요. 더 높은 페어를 조심해야 해요.'];
-      return [2, '페어는 맞았지만 보드에 더 높은 카드가 있어서 조심해야 해요.'];
+      if (D.kind === '보드 페어') return [2, '보드에 깔린 페어라 상대도 같은 페어를 갖고 있어요. ' + kickTxt];
+      if (D.kind === '포켓 페어') return [2, '포켓 ' + sh(t[0]) + sh(t[0]) + '보다 높은 카드가 보드에 있어서 상대의 더 높은 페어를 조심해야 해요.'];
+      return [2, '보드에서 낮은 카드와 맞은 페어라 더 높은 페어를 조심해야 해요.'];
     case 2:
       if (hc(t[0]) && hc(t[1])) return [3, '내 카드 두 장이 모두 페어로 맞았어요. 투페어 중에서 탄탄한 편이에요.'];
       if (t[0] === bU[0] && hc(t[0])) return [3, '가장 높은 카드로 페어를 만들어서 투페어 중에서도 강해요.'];
       var mine = hc(t[0]) ? t[0] : t[1];
       if (hc(mine) && mine >= bU[1]) return [3, '보드 페어에 높은 페어를 더해서 투페어 중에서도 괜찮은 편이에요.'];
-      return [2, '보드에 깔린 페어가 섞여 있어서 투페어 중에서는 평범한 편이에요.'];
+      if (!hc(t[0]) && !hc(t[1])) return [2, '두 페어가 모두 보드에 깔려서 상대도 같은 투페어예요. ' + kickTxt];
+      var bp = mine === t[0] ? t[1] : t[0];
+      if (mine > bp) return [2, '내 페어(' + sh(mine) + sh(mine) + ')보다 높은 카드가 보드에 있어서 상대가 더 높은 투페어를 만들 수 있어요.'];
+      return [2, '내 페어(' + sh(mine) + sh(mine) + ')가 보드 페어(' + sh(bp) + sh(bp) + ')보다 낮아서 상대가 더 높은 투페어를 만들기 쉬워요.'];
     case 3:
       if (D.kind === '셋') return [4, '포켓 페어로 셋을 맞혔어요. 상대가 눈치채기 어려운 강한 트리플이에요.'];
+      if (D.kind === '보드 트리플') return [2, '보드에 깔린 트리플이라 상대도 같은 트리플이에요. ' + kickTxt];
       return [3, '보드에 같은 숫자가 두 장 깔린 트리플이에요. 상대도 같은 숫자를 들고 있을 수 있어요.'];
     case 4: {
       var top = t[0], nut = top === 14 || (used === 2 && top >= 12);
