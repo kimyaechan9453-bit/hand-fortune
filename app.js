@@ -433,15 +433,24 @@ function render(f) {
     if (reduce) { flipCard(s, f.cards[i]); return; }
     later(function () { dealCard(s); }, T[i][0]); later(function () { flipCard(s, f.cards[i]); }, T[i][1]);
   });
-  var END = reduce ? 0 : 4950;
-  later(function () { $('handName').textContent = f.ev.name; res.classList.remove('dealing'); $('shareBtn').disabled = false; $('hand').classList.add('done'); $('explain').classList.add('show'); celebrate(f.ev.rank); }, END);
-  later(function () {
+  var END = reduce ? 0 : 4950, ended = false;
+  function finish() { if (ended) return; ended = true; skipFn = null; $('handName').textContent = f.ev.name; res.classList.remove('dealing'); $('shareBtn').disabled = false; $('hand').classList.add('done'); $('explain').classList.add('show'); celebrate(f.ev.rank); }
+  function fill() {
     m.querySelectorAll('.bar span').forEach(function (sp, i) { sp.style.width = f.bal[i].value + '%'; });
     var start = null, dur = reduce ? 1 : 900;
     function tick(t) { if (!start) start = t; var p = Math.min(1, (t - start) / dur); var v = Math.round(f.score * p); $('score').textContent = v; ring.style.setProperty('--p', v); if (p < 1) requestAnimationFrame(tick); }
     requestAnimationFrame(tick);
-  }, END + 120);
+  }
+  skipFn = function () {
+    if (ended) return; clearTimers();
+    slots.forEach(function (s, i) { var cd = s.querySelector('.cd'); if (!cd) { cd = document.createElement('div'); cd.className = 'cd'; s.appendChild(cd); } cd.getAnimations && cd.getAnimations().forEach(function (a) { a.cancel(); }); cd.innerHTML = faceHTML(f.cards[i]); });
+    finish(); later(fill, 120);
+  };
+  later(finish, END);
+  later(fill, END + 120);
 }
+var skipFn = null;
+function skipDeal() { if (skipFn) skipFn(); }
 var RKEY = 'handtalk.fortune.reroll';
 function getReroll(nick) { try { var o = JSON.parse(localStorage.getItem(RKEY) || '{}'); return (o.date === todayKey() && o.nick === nick) ? (o.n || 0) : 0; } catch (e) { return 0; } }
 function setReroll(nick, n) { try { localStorage.setItem(RKEY, JSON.stringify({ date: todayKey(), nick: nick, n: n })); } catch (e) {} }
@@ -475,7 +484,7 @@ function copy(text) {
   return new Promise(function (res, rej) { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy') ? res() : rej(); } catch (e) { rej(e); } document.body.removeChild(ta); });
 }
 /* ---------- share image (canvas) ---------- */
-var SUIT_COL = { s: '#191F28', h: '#E74C3C', d: '#3182F6', c: '#00A65A' };
+var SUIT_COL = { s: '#191F28', h: '#E74C3C', d: '#F08C00', c: '#00A65A' };
 var FONT = '"Pretendard","Noto Sans KR",system-ui,sans-serif';
 function shareUrl() { return location.origin + location.pathname; }
 function rrect(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }
@@ -551,6 +560,8 @@ document.addEventListener('DOMContentLoaded', function () {
   try { $('nick').value = localStorage.getItem(KEY) || ''; } catch (e) {}
   $('dealBtn').addEventListener('click', showResult);
   $('nick').addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
+  $('skipBtn').addEventListener('click', skipDeal);
+  $('hand').addEventListener('click', skipDeal);
   $('shareBtn').addEventListener('click', function () { try { shareResult(); } catch (e) { sharing = false; toast('공유하지 못했어요. 다시 시도해 주세요.'); } });
   $('sheetClose').addEventListener('click', function () { $('sheet').hidden = true; $('shareBtn').focus(); });
   $('sheet').addEventListener('click', function (e) { if (e.target === $('sheet')) $('sheet').hidden = true; });
