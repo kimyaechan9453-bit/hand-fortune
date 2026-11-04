@@ -233,7 +233,52 @@ function madeInfo(cards) {
     text: before + where + desc + verb + drawNote + ' ' + use,
     steps: st.map(function (e) { return e.name; }), progress: st.map(function (e, i) { return STREETS[i] + ' ' + e.name; }).join(' → ') };
 }
-function explain(cards) { return { hole: preflopInfo(cards[0], cards[1]), made: madeInfo(cards) }; }
+// final hand grade on the same R/S/A/B scale as preflop, split by how strong the hand is within its rank
+function madeGrade(cards) {
+  var D = describe(cards), ev = D.ev, t = ev.tiebreak, hole = cards.slice(0, 2), board = cards.slice(2);
+  var bU = board.map(function (c) { return c.r; }).sort(function (x, y) { return y - x; }).filter(function (r, i, a) { return a.indexOf(r) === i; });
+  var used = ev.best5.filter(function (i) { return i < 2; }).length;
+  var hc = function (r) { return hole.filter(function (c) { return c.r === r; }).length; };
+  if (used === 0) return [ev.rank >= 7 ? 4 : 2, '보드 다섯 장이 그대로 족보라 상대도 같은 족보를 갖고 있어요.'];
+  switch (ev.rank) {
+    case 1:
+      if (D.kind === '오버페어') return [3, '보드의 어떤 카드보다 높은 페어예요. 원페어 중에서 가장 강해요.'];
+      if (D.kind === '탑 페어') {
+        var kick = hole[0].r === t[0] ? hole[1].r : hole[0].r;
+        return kick >= 11 ? [3, '보드에서 가장 높은 카드와 맞은 데다 키커까지 좋아요.'] : [2, '보드에서 가장 높은 카드와 맞았지만 키커가 조금 아쉬워요.'];
+      }
+      if (D.kind === '세컨드 페어') return [2, '두 번째로 높은 카드와 맞았어요. 더 높은 페어를 조심해야 해요.'];
+      return [2, '페어는 맞았지만 보드에 더 높은 카드가 있어서 조심해야 해요.'];
+    case 2:
+      if (hc(t[0]) && hc(t[1])) return [3, '내 카드 두 장이 모두 페어로 맞았어요. 투페어 중에서 탄탄한 편이에요.'];
+      if (t[0] === bU[0] && hc(t[0])) return [3, '가장 높은 카드로 페어를 만들어서 투페어 중에서도 강해요.'];
+      return [2, '보드에 깔린 페어가 섞여 있어서 투페어 중에서는 평범한 편이에요.'];
+    case 3:
+      if (D.kind === '셋') return [4, '포켓 페어로 셋을 맞혔어요. 상대가 눈치채기 어려운 강한 트리플이에요.'];
+      return [3, '보드에 같은 숫자가 두 장 깔린 트리플이에요. 상대도 같은 숫자를 들고 있을 수 있어요.'];
+    case 4: {
+      var top = t[0], nut = top === 14 || (used === 2 && top >= 12);
+      return nut ? [4, '높은 쪽 스트레이트라 웬만해선 지지 않아요.'] : top >= 10 ? [4, '꽤 높은 스트레이트예요. 든든하게 밀고 갈 수 있어요.'] : [3, '스트레이트는 맞았지만 더 높은 스트레이트를 조심해야 해요.'];
+    }
+    case 5:
+      if (D.kind === '넛 플러시') return [4, '그 무늬로 만들 수 있는 가장 높은 플러시예요.'];
+      var fh = Math.max.apply(null, hole.filter(function (c) { return c.s === cards[ev.best5[0]].s; }).map(function (c) { return c.r; }));
+      return fh >= 12 ? [4, '높은 카드로 만든 플러시라 꽤 든든해요.'] : [3, '플러시는 맞았지만 더 높은 플러시를 조심해야 해요.'];
+    case 6:
+      return hc(t[0]) ? [4, '트리플 쪽에 내 카드가 들어간 풀하우스라 아주 강해요.'] : [4, '풀하우스예요. 웬만한 족보는 다 이겨요.'];
+    case 7:
+      return hc(t[0]) ? [5, '내 카드로 만든 포카드예요. 평생 몇 번 보기 힘든 족보예요.'] : [4, '보드에 깔린 포카드예요. 승부는 남은 한 장에서 갈려요.'];
+    case 8: return [5, '스트레이트에 플러시까지 겹친 정말 귀한 족보예요.'];
+    case 9: return [5, '홀덤 최고의 족보예요. 오늘은 기념해야 할 날이에요.'];
+  }
+  return [2, ''];
+}
+function finalInfo(cards) {
+  var D = describe(cards), g = madeGrade(cards), m = madeInfo(cards);
+  var where = m.at === 0 ? '플랍에서 완성됐어요.' : STREETS[m.at] + '에서 완성됐어요.';
+  return { tier: g[0], label: TIER_LABEL[g[0]], name: D.desc, text: where + ' ' + g[1] };
+}
+function explain(cards) { var h = preflopInfo(cards[0], cards[1]); return { hole: h, made: madeInfo(cards), fin: finalInfo(cards) }; }
 /* ---------- fortune ---------- */
 function todayKey() {
   try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
@@ -318,6 +363,10 @@ function render(f) {
   $('exBars').className = 'ex-bars t' + x.hole.tier;
   [].forEach.call($('exBars').children, function (b, i) { b.className = i < x.hole.tier ? 'on' : ''; });
   $('exName').textContent = x.hole.name; $('exHole').textContent = x.hole.text;
+  $('exTier2').textContent = x.fin.label; $('exTier2').className = 'ex-pill t' + x.fin.tier;
+  $('exBars2').className = 'ex-bars t' + x.fin.tier;
+  [].forEach.call($('exBars2').children, function (b, i) { b.className = i < x.fin.tier ? 'on' : ''; });
+  $('exName2').textContent = x.fin.name; $('exMade').textContent = x.fin.text;
   var rn = $('rerollNote'); rn.hidden = !f.reroll; rn.textContent = f.reroll ? '다시 뽑은 핸드예요 (' + (f.reroll + 1) + '번째)' : '';
   var res = $('result'); res.classList.add('dealing'); $('shareBtn').disabled = true;
   $('handName').textContent = '카드를 받는 중…'; $('oneLine').textContent = '“' + f.oneLine + '”';
