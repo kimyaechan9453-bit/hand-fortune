@@ -11,7 +11,11 @@ function mulberry32(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; 
 
 function dealHand(rnd) {
   var deck = []; SUITS.forEach(function (s) { for (var r = 2; r <= 14; r++) deck.push({ r: r, s: s }); });
-  for (var i = deck.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var t = deck[i]; deck[i] = deck[j]; deck[j] = t; }
+  // only deal playable starting hands (tier 2+); reshuffle otherwise
+  for (var k = 0; k < 500; k++) {
+    for (var i = deck.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var t = deck[i]; deck[i] = deck[j]; deck[j] = t; }
+    if (preflopTier(deck[0], deck[1]) >= 2) break;
+  }
   return deck.slice(0, 7);
 }
 
@@ -110,7 +114,6 @@ function preflopTier(a, b) {
   if (lo >= 10) return (s || (hi === 14 && lo >= 11) || (hi === 13 && lo === 12)) ? 3 : 2; // suited/strong broadways vs other offsuit broadways
   if (s && gap === 1 && lo >= 4) return 3;                                     // 54s-T9s
   if (s && (hi === 14 || (gap === 2 && lo >= 5))) return 2;                    // suited Ax, suited one-gappers
-  if (!s && gap === 1 && lo >= 7) return 2;                                    // 87o-T9o
   return 1;
 }
 function preflopInfo(a, b) {
