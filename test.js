@@ -35,9 +35,10 @@ const det = a === b && a !== c; if (!det) fail++; console.log((det ? 'PASS' : 'F
   chk('never deals weak (tier 1) hole cards', Array.from({length: 3000}, (_, i) => makeFortune('2026-11-04', 'n' + i, i % 5)).every(f => preflopTier(f.cards[0], f.cards[1]) >= 2));
   const tier = h => preflopTier(...P(h));
   chk('tier AA/KK/QQ/AKs = 5', ['Ah Ad','Kh Kd','Qs Qc','As Ks'].every(h => tier(h) === 5));
-  chk('tier JJ/TT/AKo/AQs/KQs = 4', ['Jh Jd','Th Td','Ah Kd','Ah Qh','Kc Qc'].every(h => tier(h) === 4));
-  chk('tier 77/KJs/AQo/76s = 3', ['7h 7d','Kh Jh','Ah Qd','7s 6s'].every(h => tier(h) === 3));
-  chk('tier 22/A5s/KJo = 2, T9o = 1 (not dealt)', ['2h 2d','Ah 5h','Kh Jd'].every(h => tier(h) === 2) && tier('Th 9d') === 1);
+  chk('tier R급 AA/JJ/AKs = 5', ['Ah Ad','Jh Jd','Ah Kh'].every(h => tier(h) === 5));
+  chk('tier S급 TT/AKo/AQo/KQs = 4', ['Th Td','Ah Kd','Ah Qd','Kc Qc'].every(h => tier(h) === 4));
+  chk('tier A급 77/AJo/KQo/T9s/A5s = 3', ['7h 7d','Ah Jd','Kh Qd','Ts 9s','Ah 5h'].every(h => tier(h) === 3));
+  chk('tier B급 22/KJo/76s/A2s = 2, T9o = 1 (not dealt)', ['2h 2d','Kh Jd','7s 6s','Ah 2h'].every(h => tier(h) === 2) && tier('Th 9d') === 1);
   chk('tier 72o/J4o/93s = 1', ['7h 2d','Jh 4d','9s 3s'].every(h => tier(h) === 1));
   const M = h => explain(P(h)).made;
   chk('top pair + kicker', M('Kh Jd Ks 7c 2d 3h 9s').kind === '탑 페어' && M('Kh Jd Ks 7c 2d 3h 9s').text.includes('키커 J'));
