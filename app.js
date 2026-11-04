@@ -257,6 +257,7 @@ function makeFortune(dateKey, nick, reroll) {
   var strength = ev.rank === 0 ? (high - 2) / 12 * 0.3 : 0.25 + ev.rank * 0.08;
   var score = Math.round(Math.max(30, Math.min(100, 30 + strength * 50 + avg * 0.25 + rnd() * 6)));
   if (ev.rank >= 8) score = Math.max(score, 96);
+  if (ev.rank === 9) score = 100;
   return { date: dateKey, nick: nick, reroll: reroll, cards: cards, ev: ev, bal: bal, score: score,
     message: pick(rnd, MSG[ev.rank]), contrib: contribLine(rnd, ev), oneLine: pick(rnd, ONE), explain: explain(cards) };
 }
