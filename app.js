@@ -234,7 +234,25 @@ function madeInfo(cards) {
     steps: st.map(function (e) { return e.name; }), progress: st.map(function (e, i) { return STREETS[i] + ' ' + e.name; }).join(' → ') };
 }
 // final hand grade on the same R/S/A/B scale as preflop, split by how strong the hand is within its rank
+// true nuts: no possible opponent hole cards beat this hand on this board
+function isNuts(cards) {
+  var board = cards.slice(2), me = evaluate(cards), taken = {};
+  cards.forEach(function (c) { taken[c.r + c.s] = 1; });
+  var rest = []; SUITS.forEach(function (s) { for (var r = 2; r <= 14; r++) if (!taken[r + s]) rest.push({ r: r, s: s }); });
+  for (var i = 0; i < rest.length; i++) for (var j = i + 1; j < rest.length; j++)
+    if (cmp(evaluate([rest[i], rest[j]].concat(board)), me) > 0) return false;
+  return true;
+}
 function madeGrade(cards) {
+  var g = madeGradeBase(cards), ev = evaluate(cards);
+  var used = ev.best5.filter(function (i) { return i < 2; }).length;
+  if (used > 0 && isNuts(cards)) {
+    var nm = describe(cards).kind.replace(/^넛 /, '');
+    return [Math.max(g[0], ev.rank >= 7 ? 5 : ev.rank >= 3 ? 4 : 3), '넛 ' + nm + '예요. 이 보드에서 만들 수 있는 가장 강한 족보라 누구에게도 지지 않아요.'];
+  }
+  return g;
+}
+function madeGradeBase(cards) {
   var D = describe(cards), ev = D.ev, t = ev.tiebreak, hole = cards.slice(0, 2), board = cards.slice(2);
   var bU = board.map(function (c) { return c.r; }).sort(function (x, y) { return y - x; }).filter(function (r, i, a) { return a.indexOf(r) === i; });
   var used = ev.best5.filter(function (i) { return i < 2; }).length;
@@ -245,13 +263,15 @@ function madeGrade(cards) {
       if (D.kind === '오버페어') return [3, '보드의 어떤 카드보다 높은 페어예요. 원페어 중에서 가장 강해요.'];
       if (D.kind === '탑 페어') {
         var kick = hole[0].r === t[0] ? hole[1].r : hole[0].r;
-        return kick >= 11 ? [3, '보드에서 가장 높은 카드와 맞은 데다 키커까지 좋아요.'] : [2, '보드에서 가장 높은 카드와 맞았지만 키커가 조금 아쉬워요.'];
+        return kick >= 11 ? [3, '보드에서 가장 높은 카드와 맞은 데다 키커까지 좋아요.'] : [3, '보드에서 가장 높은 카드와 맞았어요. 키커가 조금 아쉽지만 충분히 강해요.'];
       }
       if (D.kind === '세컨드 페어') return [2, '두 번째로 높은 카드와 맞았어요. 더 높은 페어를 조심해야 해요.'];
       return [2, '페어는 맞았지만 보드에 더 높은 카드가 있어서 조심해야 해요.'];
     case 2:
       if (hc(t[0]) && hc(t[1])) return [3, '내 카드 두 장이 모두 페어로 맞았어요. 투페어 중에서 탄탄한 편이에요.'];
       if (t[0] === bU[0] && hc(t[0])) return [3, '가장 높은 카드로 페어를 만들어서 투페어 중에서도 강해요.'];
+      var mine = hc(t[0]) ? t[0] : t[1];
+      if (hc(mine) && mine >= bU[1]) return [3, '보드 페어에 높은 페어를 더해서 투페어 중에서도 괜찮은 편이에요.'];
       return [2, '보드에 깔린 페어가 섞여 있어서 투페어 중에서는 평범한 편이에요.'];
     case 3:
       if (D.kind === '셋') return [4, '포켓 페어로 셋을 맞혔어요. 상대가 눈치채기 어려운 강한 트리플이에요.'];
@@ -312,7 +332,7 @@ function shareText(f, url) { return '오늘 내 핸드는 ' + f.ev.name + ' (' +
 function fmtDate(key) { var k = key.split('-'); return k[0] + '년 ' + Number(k[1]) + '월 ' + Number(k[2]) + '일'; }
 
 /* ---------- Node export for tests ---------- */
-if (typeof module !== 'undefined' && module.exports) { module.exports = { explain: explain, preflopTier: preflopTier, evaluate: evaluate, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES, shareText: shareText, fmtDate: fmtDate }; }
+if (typeof module !== 'undefined' && module.exports) { module.exports = { isNuts: isNuts, explain: explain, preflopTier: preflopTier, evaluate: evaluate, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES, shareText: shareText, fmtDate: fmtDate }; }
 if (typeof document === 'undefined') return;
 
 /* ---------- UI ---------- */
