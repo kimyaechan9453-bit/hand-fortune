@@ -108,3 +108,14 @@ background:radial-gradient(closest-side,#F9FAFB 78%,transparent 79%),conic-gradi
 #result .rank-name,#result .reroll-note,#result .one-line,#result .score-card,#result .sec,#result .meters{transition:opacity .35s ease}
 #result.dealing .rank-name{color:#8B95A1;font-size:18px}
 #result.dealing .reroll-note,#result.dealing .one-line,#result.dealing .score-card,#result.dealing .sec,#result.dealing .meters{opacity:0;pointer-events:none}
+
+#fx{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:50}
+.rank-name.rare{background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 1.6s linear infinite}
+.rank-name.r7{background-image:linear-gradient(90deg,#5B3CC4,#9C7BFF,#C9B8FF,#9C7BFF,#5B3CC4)}
+.rank-name.r8{background-image:linear-gradient(90deg,#7C4DFF,#3182F6,#00C471,#FFB800,#F04452,#7C4DFF)}
+.rank-name.r9{background-image:linear-gradient(90deg,#B8860B,#FFD54F,#FFF3C4,#FFD54F,#B8860B);filter:drop-shadow(0 0 8px rgba(255,193,7,.55))}
+@keyframes shimmer{to{background-position:-200% center}}
+body.fx-flash::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:49;background:radial-gradient(circle at 50% 35%,rgba(255,215,64,.55),rgba(255,215,64,0) 70%);animation:flash 1.4s ease-out forwards}
+@keyframes flash{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
+.hand.shake{animation:shake .5s ease-in-out}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-5px) rotate(-.5deg)}40%{transform:translateX(5px) rotate(.5deg)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}

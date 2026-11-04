@@ -304,7 +304,7 @@ function flipCard(slot, c) {
 }
 function render(f) {
   clearTimers();
-  $('hand').classList.remove('done');
+  $('hand').classList.remove('done'); clearCelebrate();
   var hole = $('hole'), board = $('board'); hole.innerHTML = ''; board.innerHTML = '';
   var slots = f.cards.map(function (c, i) {
     var el = cardEl(c, f.ev.best5.indexOf(i) >= 0);
@@ -338,7 +338,7 @@ function render(f) {
     later(function () { dealCard(s); }, T[i][0]); later(function () { flipCard(s, f.cards[i]); }, T[i][1]);
   });
   var END = reduce ? 0 : 4950;
-  later(function () { $('handName').textContent = f.ev.name; res.classList.remove('dealing'); $('shareBtn').disabled = false; $('hand').classList.add('done'); $('explain').classList.add('show'); }, END);
+  later(function () { $('handName').textContent = f.ev.name; res.classList.remove('dealing'); $('shareBtn').disabled = false; $('hand').classList.add('done'); $('explain').classList.add('show'); celebrate(f.ev.rank); }, END);
   later(function () {
     m.querySelectorAll('.bar span').forEach(function (sp, i) { sp.style.width = f.bal[i].value + '%'; });
     var start = null, dur = reduce ? 1 : 900;
@@ -454,3 +454,48 @@ document.addEventListener('DOMContentLoaded', function () {
   $('resetBtn').addEventListener('click', function () { clearTimers(); $('result').hidden = true; $('start').hidden = false; $('dealBtn').focus(); window.scrollTo(0, 0); });
 });
 })();
+
+// rare-hand effects: 포카드 sparkles, 스트레이트 플러시 confetti, 로열 플러시 gold confetti + flash
+var fxRaf = 0;
+function clearCelebrate() {
+  cancelAnimationFrame(fxRaf);
+  var c = document.getElementById('fx'); if (c) c.remove();
+  document.body.classList.remove('fx-flash');
+  var n = document.getElementById('handName'); if (n) n.classList.remove('rare', 'r7', 'r8', 'r9');
+  var h = document.getElementById('hand'); if (h) h.classList.remove('shake');
+}
+function celebrate(rank) {
+  if (rank < 7) return;
+  var name = document.getElementById('handName'); name.classList.add('rare', 'r' + rank);
+  if (rank === 9) { document.body.classList.add('fx-flash'); document.getElementById('hand').classList.add('shake'); }
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var cv = document.createElement('canvas'); cv.id = 'fx'; cv.setAttribute('aria-hidden', 'true'); document.body.appendChild(cv);
+  var dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight; cv.width = W * dpr; cv.height = H * dpr;
+  var x = cv.getContext('2d'); x.scale(dpr, dpr);
+  var nb = name.getBoundingClientRect(), ox = nb.left + nb.width / 2, oy = nb.top + nb.height / 2;
+  var COLORS = rank === 9 ? ['#FFD54F', '#FFC107', '#FFB300', '#FFF3C4', '#F9A825']
+    : rank === 8 ? ['#7C4DFF', '#3182F6', '#00C471', '#FFB800', '#F04452']
+    : ['#FFFFFF', '#FFE082', '#B39DDB', '#90CAF9'];
+  var P = [], n = rank === 9 ? 220 : rank === 8 ? 140 : 46;
+  for (var i = 0; i < n; i++) {
+    var a = Math.random() * Math.PI * 2, sp = (rank === 7 ? 2 : 4) + Math.random() * (rank === 7 ? 4 : 8);
+    var fromTop = rank >= 8 && i % 2 === 0;
+    P.push({ x: fromTop ? Math.random() * W : ox, y: fromTop ? -20 - Math.random() * H * 0.4 : oy,
+      vx: fromTop ? (Math.random() - 0.5) * 2 : Math.cos(a) * sp, vy: fromTop ? 2 + Math.random() * 3 : Math.sin(a) * sp - 3,
+      s: rank === 7 ? 2 + Math.random() * 3 : 5 + Math.random() * 6, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.3,
+      c: COLORS[i % COLORS.length], star: rank === 7 || (rank === 9 && i % 5 === 0) });
+  }
+  var t0 = performance.now(), LIFE = rank === 9 ? 3600 : rank === 8 ? 3000 : 1800;
+  (function step(now) {
+    var t = now - t0; x.clearRect(0, 0, W, H); x.globalAlpha = Math.max(0, 1 - Math.max(0, t - LIFE * 0.6) / (LIFE * 0.4));
+    P.forEach(function (p) {
+      p.vy += rank === 7 ? 0.06 : 0.12; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+      x.save(); x.translate(p.x, p.y); x.rotate(p.rot); x.fillStyle = p.c;
+      if (p.star) { x.beginPath(); for (var k = 0; k < 8; k++) { var r = k % 2 ? p.s * 0.35 : p.s; x.lineTo(Math.cos(k * Math.PI / 4) * r, Math.sin(k * Math.PI / 4) * r); } x.fill(); }
+      else x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
+      x.restore();
+    });
+    if (t < LIFE) fxRaf = requestAnimationFrame(step); else cv.remove();
+  })(t0);
+  if (navigator.vibrate) try { navigator.vibrate(rank === 9 ? [60, 40, 60, 40, 120] : rank === 8 ? [50, 40, 80] : 40); } catch (e) {}
+}
