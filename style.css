@@ -166,3 +166,5 @@ body.fx-flash::after{content:"";position:fixed;inset:0;pointer-events:none;z-ind
 .cta-btn{grid-column:1/-1;display:block;text-align:center;text-decoration:none;color:#fff;background:var(--primary);box-sizing:border-box}
 .fine.privacy{margin-top:6px;font-size:12px;line-height:1.5}
 .cta-btn.soon{background:var(--sec);color:var(--mut);cursor:default}
+/* v35: optically centered start screen */
+.app:not(.compact){display:flex;flex-direction:column;justify-content:center;min-height:100vh;min-height:100dvh;box-sizing:border-box;padding-bottom:calc(22vh + 40px + env(safe-area-inset-bottom))}
