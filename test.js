@@ -1,4 +1,4 @@
-const { evaluate, makeFortune } = require('./app.js');
+const { evaluate, makeFortune, validNick } = require('./app.js');
 const P = s => s.split(' ').map(t => ({ r: { A: 14, K: 13, Q: 12, J: 11, T: 10 }[t[0]] || +t[0], s: t[1] }));
 const cases = [
   ['As Ks Qs Js Ts', '로열 플러시'], ['9h 8h 7h 6h 5h', '스트레이트 플러시'], ['5d 4d 3d 2d Ad', '스트레이트 플러시'],
@@ -70,4 +70,5 @@ const det = a === b && a !== c; if (!det) fail++; console.log((det ? 'PASS' : 'F
   chk('Android payload files+text, no url', JSON.stringify(Object.keys(and).sort()) === '["files","text"]' && and.files[0] === F && !('url' in and));
   chk('no share API -> modal', sharePayload({ hasShare: false, canFiles: true, desktop: false, ios: true, file: F, text: T }) === null && sharePayload({ hasShare: false, canFiles: true, desktop: false, ios: false, file: F, text: T }) === null);
   chk('desktop -> modal', sharePayload({ hasShare: true, canFiles: true, desktop: true, ios: false, file: F, text: T }) === null); }
-console.log(`\n${cases.length + 29 - fail}/${cases.length + 29} passed`); process.exit(fail ? 1 : 0);
+chk('validNick: empty/space-only rejected, text accepted', !validNick('') && !validNick('   ') && !validNick('\t\n') && !validNick(null) && validNick('a') && validNick(' 리버 '));
+console.log(`\n${cases.length + 30 - fail}/${cases.length + 30} passed`); process.exit(fail ? 1 : 0);

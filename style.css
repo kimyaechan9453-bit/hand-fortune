@@ -19,6 +19,7 @@ h1{font-size:24px;margin:16px 0 4px;font-weight:700;letter-spacing:-.02em}
 .deck .card:nth-child(1){transform:translateX(-50%) translateX(-34px) rotate(-8deg)}
 .deck .card:nth-child(2){transform:translateX(-50%) translateX(34px) translateY(-4px) rotate(8deg)}
 .intro{text-align:center;line-height:1.6;margin:0 0 18px;font-size:15px;color:#4E5968}
+.nick-hint{font-size:13px;color:#F04452;margin:-8px 0 12px}
 .lbl{display:block;font-size:13px;color:var(--mut);margin-bottom:6px}
 input{width:100%;font:inherit;font-size:16px;color:var(--fg);background:#F9FAFB;border:1px solid var(--border);border-radius:var(--r-md);padding:13px 14px;margin-bottom:14px}
 input:focus{outline:2px solid var(--primary);outline-offset:0;background:#fff}

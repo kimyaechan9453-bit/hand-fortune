@@ -22,7 +22,7 @@
 <meta name="twitter:title" content="오늘의 핸드 운세">
 <meta name="twitter:description" content="오늘 나의 핸드 2장과 보드 5장을 뽑아 보세요. 홀덤 족보로 보는 오늘의 운세예요.">
 <meta name="twitter:image" content="https://kimyaechan9453-bit.github.io/hand-fortune/og-image.png?v=31">
-<link rel="stylesheet" href="style.css?v=22">
+<link rel="stylesheet" href="style.css?v=23">
 </head>
 <body>
 <main class="app">
@@ -38,9 +38,10 @@
     </div>
     <h2 id="startTitle" class="sr-only">시작하기</h2>
     <p class="intro">오늘의 내 핸드 2장과 보드 5장을 확인해 보세요.<br>오늘 나에게 들어온 핸드는 뭘까요?</p>
-    <label for="nick" class="lbl">닉네임 (선택)</label>
-    <input id="nick" type="text" maxlength="16" autocomplete="nickname" placeholder="예: 리버의신">
-    <button id="dealBtn" class="btn primary" type="button">오늘의 핸드 받기</button>
+    <label for="nick" class="lbl">닉네임</label>
+    <input id="nick" type="text" maxlength="16" autocomplete="nickname" placeholder="닉네임을 입력해 주세요" required aria-required="true" aria-describedby="nickHint">
+    <p id="nickHint" class="nick-hint" hidden>닉네임을 입력해야 핸드를 받을 수 있어요</p>
+    <button id="dealBtn" class="btn primary" type="button" disabled>오늘의 핸드 받기</button>
   </section>
 
   <section id="result" class="panel" hidden aria-labelledby="handName">
@@ -112,6 +113,6 @@
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </main>
-<script src="app.js?v=33"></script>
+<script src="app.js?v=34"></script>
 </body>
 </html>

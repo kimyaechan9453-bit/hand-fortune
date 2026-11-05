@@ -343,7 +343,8 @@ function shareText(f, url) { return '오늘 내 핸드는 ' + f.ev.name + ' (' +
 function fmtDate(key) { var k = key.split('-'); return k[0] + '년 ' + Number(k[1]) + '월 ' + Number(k[2]) + '일'; }
 
 /* ---------- Node export for tests ---------- */
-if (typeof module !== 'undefined' && module.exports) { module.exports = { isNuts: isNuts, explain: explain, preflopTier: preflopTier, evaluate: evaluate, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES, shareText: shareText, fmtDate: fmtDate, imgName: imgName, useNativeShare: useNativeShare, sharePayload: sharePayload }; }
+function validNick(v) { return typeof v === 'string' && v.trim().length > 0; }
+if (typeof module !== 'undefined' && module.exports) { module.exports = { validNick: validNick, isNuts: isNuts, explain: explain, preflopTier: preflopTier, evaluate: evaluate, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES, shareText: shareText, fmtDate: fmtDate, imgName: imgName, useNativeShare: useNativeShare, sharePayload: sharePayload }; }
 if (typeof document === 'undefined') return;
 
 /* ---------- UI ---------- */
@@ -466,7 +467,9 @@ function reroll() {
   render(current); updateRerollBtn(); window.scrollTo(0, 0);
   $('handName').focus({ preventScroll: true });
 }
+function syncDealBtn() { var ok = validNick($('nick').value); $('dealBtn').disabled = !ok; if (ok) $('nickHint').hidden = true; return ok; }
 function showResult() {
+  if (!syncDealBtn()) { $('nickHint').hidden = false; $('nick').focus(); return; }
   var nick = $('nick').value.trim();
   try { localStorage.setItem(KEY, nick); } catch (e) {}
   var n = getReroll(); rerollMem = n;
@@ -602,8 +605,10 @@ document.addEventListener('DOMContentLoaded', function () {
   setupCta(); track('visit');
   var k = todayKey().split('-'); $('date').textContent = k[0] + '년 ' + Number(k[1]) + '월 ' + Number(k[2]) + '일';
   try { $('nick').value = localStorage.getItem(KEY) || ''; } catch (e) {}
+  syncDealBtn();
+  $('nick').addEventListener('input', syncDealBtn);
   $('dealBtn').addEventListener('click', showResult);
-  $('nick').addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
+  $('nick').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); showResult(); } });
   $('skipBtn').addEventListener('click', skipDeal);
   $('shareBtn').addEventListener('click', function () { try { shareResult(); } catch (e) { sharing = false; toast('공유하지 못했어요. 다시 시도해 주세요.'); } });
   $('sheetX').addEventListener('click', hideSheet);
@@ -617,7 +622,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); } }
   });
   $('rerollBtn').addEventListener('click', reroll);
-  $('resetBtn').addEventListener('click', function () { clearTimers(); document.querySelector('.app').classList.remove('compact'); $('result').hidden = true; $('start').hidden = false; $('dealBtn').focus(); window.scrollTo(0, 0); });
+  $('resetBtn').addEventListener('click', function () { clearTimers(); document.querySelector('.app').classList.remove('compact'); $('result').hidden = true; $('start').hidden = false; syncDealBtn(); ($('dealBtn').disabled ? $('nick') : $('dealBtn')).focus(); window.scrollTo(0, 0); });
 });
 })();
 
