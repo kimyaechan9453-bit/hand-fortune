@@ -347,7 +347,7 @@ function makeFortune(dateKey, nick, reroll, dev) {
 }
 
 /* ---------- share text ---------- */
-function shareText(f, url) { return '오늘 내 핸드는 ' + f.ev.name + ' (' + f.score + '점)! 여러분도 뽑아 보세요 👉 ' + url; }
+function shareText(f, url) { return '오늘 내 핸드는 ' + f.ev.name + ' (' + f.score + '점)! 여러분도 확인해 보세요 👉 ' + url; }
 function fmtDate(key) { var k = key.split('-'); return k[0] + '년 ' + Number(k[1]) + '월 ' + Number(k[2]) + '일'; }
 
 /* ---------- Node export for tests ---------- */
