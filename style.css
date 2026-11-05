@@ -107,7 +107,13 @@ background:radial-gradient(closest-side,#F9FAFB 78%,transparent 79%),conic-gradi
 /* hide results until all cards are dealt */
 #result .rank-name,#result .reroll-note,#result .one-line,#result .score-card,#result .sec,#result .meters{transition:opacity .35s ease}
 #result.dealing .rank-name{color:#6B7684;font-size:18px}
-#result.dealing .reroll-note,#result.dealing .one-line,#result.dealing .score-card,#result.dealing .sec,#result.dealing .meters{opacity:0;pointer-events:none}
+#result.dealing .reroll-note,#result.dealing .one-line,#result.dealing .sec .sec-hint{opacity:0;pointer-events:none}
+#result.dealing .ex,#result.dealing .score-card,#result.dealing .meters li{opacity:1;transform:none;pointer-events:none;border-color:transparent;background:linear-gradient(90deg,#F2F4F6 25%,#E9ECEF 50%,#F2F4F6 75%);background-size:200% 100%;animation:skel 1.3s linear infinite}
+#result.dealing .ex>*,#result.dealing .score-card>*,#result.dealing .meters li>*{visibility:hidden}
+#result.dealing .ex{min-height:180px}
+#result.dealing .sec{color:var(--mut)}
+@keyframes skel{from{background-position:200% 0}to{background-position:0 0}}
+@media (prefers-reduced-motion:reduce){#result.dealing .ex,#result.dealing .score-card,#result.dealing .meters li{animation:none}}
 
 #fx{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:50}
 .rank-name.rare{background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 1.6s linear infinite}
@@ -130,6 +136,6 @@ body.fx-flash::after{content:"";position:fixed;inset:0;pointer-events:none;z-ind
 .meters li .mh strong::after{content:"";}
 .sec-hint{font-size:13px;font-weight:500;color:var(--mut);margin-left:6px}
 
-.skip{display:none;margin:6px auto 0;padding:6px 14px;border:0;border-radius:99px;background:var(--sec);color:var(--fg);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+.skip{display:none;margin:8px auto 4px;min-width:132px;height:44px;padding:0 24px;border:0;border-radius:99px;background:var(--sec);color:var(--fg);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.skip:active{background:#DDE1E6}
 #result.dealing .skip{display:block}
-#result.dealing .hand{cursor:pointer}

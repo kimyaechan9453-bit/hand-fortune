@@ -561,7 +561,6 @@ document.addEventListener('DOMContentLoaded', function () {
   $('dealBtn').addEventListener('click', showResult);
   $('nick').addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
   $('skipBtn').addEventListener('click', skipDeal);
-  $('hand').addEventListener('click', skipDeal);
   $('shareBtn').addEventListener('click', function () { try { shareResult(); } catch (e) { sharing = false; toast('공유하지 못했어요. 다시 시도해 주세요.'); } });
   $('sheetClose').addEventListener('click', function () { $('sheet').hidden = true; $('shareBtn').focus(); });
   $('sheet').addEventListener('click', function (e) { if (e.target === $('sheet')) $('sheet').hidden = true; });
