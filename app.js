@@ -135,8 +135,8 @@ function contribLine(rnd, ev) {
 /* ---------- 핸드 해설: preflop tier + how the made hand formed ---------- */
 var SH = { 10: 'T', 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
 function sh(r) { return SH[r] || String(r); }
-var TIER_LABEL = ['', 'C급', 'B급', 'A급', 'S급', 'R급'];
-var TIER_TEXT = ['', '시작은 조금 약한 편이에요.', '무난한 시작 핸드예요. 보드가 조금 도와주면 충분히 해볼 만해요.', '괜찮은 시작 핸드예요. 보드와 잘 맞으면 크게 갈 수 있어요.', '탄탄한 시작 핸드예요. 높은 카드끼리라 페어만 맞아도 든든해요.', '누구나 받고 싶어 하는 최상급 시작 핸드예요.'];
+var TIER_LABEL = ['', 'C', 'B', 'A', 'S', 'R'];
+var TIER_TEXT = ['', '시작은 조금 약한 편이에요.', '무난한 시작 핸드예요. 보드가 조금 도와주면 충분히 해볼 만해요.', '괜찮은 시작 핸드예요. 보드와 잘 맞으면 크게 갈 수 있어요.', '탄탄한 시작 핸드예요. 높은 카드끼리라 페어만 맞아도 든든해요.', '누구나 받고 싶어 하는 최고의 시작 핸드예요.'];
 function playable(a, b) {
   var hi = Math.max(a.r, b.r), lo = Math.min(a.r, b.r), s = a.s === b.s, gap = hi - lo;
   if (hi === lo) return hi >= 12 ? 5 : hi >= 10 ? 4 : hi >= 7 ? 3 : 2;      // AA-QQ / JJ-TT / 99-77 / 66-22
@@ -147,7 +147,7 @@ function playable(a, b) {
   if (s && (hi === 14 || (gap === 2 && lo >= 5))) return 2;                    // suited Ax, suited one-gappers
   return 1;
 }
-// R급 5, S급 4, A급 3, B급 2 (only the 52 playable hands are dealt; anything else is 1 and never shown)
+// R 5, S 4, A 3, B 2 (only the 52 playable hands are dealt; anything else is 1 and never shown)
 var TIER_R = ['AA', 'KK', 'QQ', 'JJ', 'AKs'];
 var TIER_S = ['TT', '99', 'AKo', 'AQs', 'AJs', 'KQs', 'AQo', 'ATs', 'KJs'];
 var TIER_A = ['88', '77', 'AJo', 'KQo', 'KTs', 'QJs', 'QTs', 'JTs', 'T9s', 'A9s', 'A8s', 'A5s'];
