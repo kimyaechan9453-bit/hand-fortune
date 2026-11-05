@@ -460,7 +460,7 @@ var rerollMem = 0;
 function reroll() {
   if (!current) return;
   var used = Math.max(getReroll(), rerollMem); if (used >= MAX_REROLL) { updateRerollBtn(); toast('오늘 다시 뽑기를 모두 사용했어요'); return; }
-  var n = used + 1; rerollMem = n; setReroll(n);
+  var n = used + 1; rerollMem = n; setReroll(n); track('reroll');
   current = makeFortune(todayKey(), current.nick, n, DEV);
   $('result').classList.remove('fade'); void $('result').offsetWidth; $('result').classList.add('fade');
   render(current); updateRerollBtn(); window.scrollTo(0, 0);
@@ -469,7 +469,8 @@ function reroll() {
 function showResult() {
   var nick = $('nick').value.trim();
   try { localStorage.setItem(KEY, nick); } catch (e) {}
-  current = makeFortune(todayKey(), nick, 0, DEV);
+  var n = getReroll(); rerollMem = n;
+  current = makeFortune(todayKey(), nick, n, DEV); track('deal');
   document.querySelector('.app').classList.add('compact');
   $('start').hidden = true; $('result').hidden = false; $('result').classList.add('fade');
   render(current); updateRerollBtn();
@@ -506,39 +507,40 @@ function drawCard(x, c, cx, cy, w, h, win) {
 function buildShareImage(f) {
   var ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
   return ready.then(loadLogo).then(function (logo) {
-    var W = 1080, H = 1520, cv = document.createElement('canvas'); cv.width = W; cv.height = H; var x = cv.getContext('2d');
+    var W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H; var x = cv.getContext('2d');
     x.fillStyle = '#F2F4F6'; x.fillRect(0, 0, W, H);
-    rrect(x, 60, 60, W - 120, H - 120, 48); x.fillStyle = '#fff'; x.fill(); x.strokeStyle = '#E5E8EB'; x.lineWidth = 2; x.stroke();
-    var L = 120;
-    if (logo) x.drawImage(logo, L, 120, 64, 64);
-    x.fillStyle = '#191F28'; x.textAlign = 'left'; x.textBaseline = 'middle'; x.font = '800 40px ' + FONT; x.fillText('핸드톡', L + (logo ? 82 : 0), 152);
-    x.textAlign = 'right'; x.fillStyle = '#8B95A1'; x.font = '500 32px ' + FONT; x.fillText(fmtDate(f.date), W - 120, 152);
-    x.textAlign = 'left'; x.fillStyle = '#191F28'; x.font = '700 56px ' + FONT; x.fillText('오늘의 핸드 운세', L, 250);
-    if (f.nick) { x.fillStyle = '#3182F6'; x.font = '600 34px ' + FONT; x.fillText(f.nick + ' 님의 핸드', L, 312); }
-    rrect(x, 100, 360, W - 200, 560, 32); x.fillStyle = '#F9FAFB'; x.fill(); x.strokeStyle = '#E5E8EB'; x.stroke();
-    x.fillStyle = '#3182F6'; x.font = '700 30px ' + FONT; x.textAlign = 'center'; x.fillText('내 핸드', W / 2, 410);
-    var hw = 150, hh = 214, gap = 20; f.cards.slice(0, 2).forEach(function (c, i) { drawCard(x, c, W / 2 - hw - gap / 2 + i * (hw + gap), 440, hw, hh, f.ev.best5.indexOf(i) >= 0); });
-    x.fillStyle = '#3182F6'; x.fillText('보드', W / 2, 692);
-    var bw = 140, bh = 200 * .78, bg = 16, bwid = 5 * (bw * .78) + 4 * bg; bw = bw * .78; bh = bw * 78 / 54;
-    f.cards.slice(2).forEach(function (c, i) { drawCard(x, c, W / 2 - bwid / 2 + i * (bw + bg), 720, bw, bh, f.ev.best5.indexOf(i + 2) >= 0); });
-    x.fillStyle = '#8B95A1'; x.font = '500 30px ' + FONT; x.fillText('오늘의 핸드', W / 2, 985);
-    x.fillStyle = '#3182F6'; x.font = '800 84px ' + FONT; x.fillText(f.ev.name, W / 2, 1060);
+    rrect(x, 40, 40, W - 80, H - 80, 48); x.fillStyle = '#fff'; x.fill(); x.strokeStyle = '#E5E8EB'; x.lineWidth = 2; x.stroke();
+    var L = 110;
+    if (logo) x.drawImage(logo, L, 90, 60, 60);
+    x.fillStyle = '#191F28'; x.textAlign = 'left'; x.textBaseline = 'middle'; x.font = '800 38px ' + FONT; x.fillText('핸드톡', L + (logo ? 76 : 0), 120);
+    x.textAlign = 'right'; x.fillStyle = '#8B95A1'; x.font = '500 30px ' + FONT; x.fillText(fmtDate(f.date), W - L, 120);
+    x.textAlign = 'left'; x.fillStyle = '#191F28'; x.font = '700 52px ' + FONT; x.fillText('오늘의 핸드 운세', L, 205);
+    if (f.nick) { x.fillStyle = '#3182F6'; x.font = '600 32px ' + FONT; x.fillText(f.nick + ' 님의 핸드', L, 258); }
+    var by = f.nick ? 295 : 255;
+    rrect(x, 90, by, W - 180, 500, 32); x.fillStyle = '#F9FAFB'; x.fill(); x.strokeStyle = '#E5E8EB'; x.stroke();
+    x.fillStyle = '#3182F6'; x.font = '700 28px ' + FONT; x.textAlign = 'center'; x.fillText('내 핸드', W / 2, by + 38);
+    var hw = 134, hh = 192, gap = 18; f.cards.slice(0, 2).forEach(function (c, i) { drawCard(x, c, W / 2 - hw - gap / 2 + i * (hw + gap), by + 62, hw, hh, f.ev.best5.indexOf(i) >= 0); });
+    x.fillStyle = '#3182F6'; x.fillText('보드', W / 2, by + 290);
+    var bw = 110, bg = 16, bh = bw * 78 / 54, bwid = 5 * bw + 4 * bg;
+    f.cards.slice(2).forEach(function (c, i) { drawCard(x, c, W / 2 - bwid / 2 + i * (bw + bg), by + 312, bw, bh, f.ev.best5.indexOf(i + 2) >= 0); });
+    var y = by + 500;
+    x.fillStyle = '#3182F6'; x.font = '800 80px ' + FONT; x.fillText(f.ev.name, W / 2, y + 75);
     var TC = { 5: ['#7C4DFF', '#fff'], 4: ['#3182F6', '#fff'], 3: ['#00C471', '#fff'], 2: ['#FFB800', '#191F28'] };
     var pills = [['프리플랍 ' + f.explain.hole.label, f.explain.hole.tier], ['최종 ' + f.explain.fin.label, f.explain.fin.tier]];
-    x.font = '800 52px ' + FONT; var sw = x.measureText(f.score + '점').width;
+    x.font = '800 50px ' + FONT; var sw = x.measureText(f.score + '점').width;
     x.font = '700 30px ' + FONT; var pw = pills.map(function (p) { return x.measureText(p[0]).width + 44; });
-    var gx = 24, tot = sw + gx + pw[0] + 12 + pw[1], cx0 = W / 2 - tot / 2;
-    x.textAlign = 'left'; x.fillStyle = '#191F28'; x.font = '800 52px ' + FONT; x.fillText(f.score + '점', cx0, 1135);
+    var gx = 24, tot = sw + gx + pw[0] + 12 + pw[1], cx0 = W / 2 - tot / 2, sy = y + 150;
+    x.textAlign = 'left'; x.fillStyle = '#191F28'; x.font = '800 50px ' + FONT; x.fillText(f.score + '점', cx0, sy);
     var px = cx0 + sw + gx;
-    pills.forEach(function (p, i) { var c = TC[Math.max(2, p[1])]; rrect(x, px, 1135 - 26, pw[i], 52, 26); x.fillStyle = c[0]; x.fill();
-      x.fillStyle = c[1]; x.font = '700 30px ' + FONT; x.textAlign = 'center'; x.fillText(p[0], px + pw[i] / 2, 1136); px += pw[i] + 12; });
+    pills.forEach(function (p, i) { var c = TC[Math.max(2, p[1])]; rrect(x, px, sy - 26, pw[i], 52, 26); x.fillStyle = c[0]; x.fill();
+      x.fillStyle = c[1]; x.font = '700 30px ' + FONT; x.textAlign = 'center'; x.fillText(p[0], px + pw[i] / 2, sy + 1); px += pw[i] + 12; });
     x.textAlign = 'center';
-    rrect(x, 120, 1180, W - 240, 128, 24); x.fillStyle = '#F2F7FF'; x.fill();
-    x.fillStyle = '#191F28'; x.font = '600 34px ' + FONT;
-    var ml = wrapLines(x, f.message, W - 320).slice(0, 2); ml.forEach(function (l, i) { x.fillText(l, W / 2, 1244 + (i - (ml.length - 1) / 2) * 46); });
-    x.fillStyle = '#4E5968'; x.font = '500 30px ' + FONT;
-    var ol = wrapLines(x, '“' + f.oneLine + '”', W - 280).slice(0, 2); ol.forEach(function (l, i) { x.fillText(l, W / 2, 1360 + i * 42); });
-    x.fillStyle = '#8B95A1'; x.font = '500 28px ' + FONT; x.fillText(shareUrl().replace(/^https?:\/\//, ''), W / 2, 1360 + ol.length * 42 + 30);
+    var my = sy + 45; rrect(x, 110, my, W - 220, 116, 24); x.fillStyle = '#F2F7FF'; x.fill();
+    x.fillStyle = '#191F28'; x.font = '600 32px ' + FONT;
+    var ml = wrapLines(x, f.message, W - 300).slice(0, 2); ml.forEach(function (l, i) { x.fillText(l, W / 2, my + 58 + (i - (ml.length - 1) / 2) * 44); });
+    x.fillStyle = '#4E5968'; x.font = '500 28px ' + FONT;
+    var oy = my + 160, ol = wrapLines(x, '“' + f.oneLine + '”', W - 260).slice(0, 2); ol.forEach(function (l, i) { x.fillText(l, W / 2, oy + i * 38); });
+    x.fillStyle = '#8B95A1'; x.font = '500 26px ' + FONT; x.fillText(shareUrl().replace(/^https?:\/\//, ''), W / 2, H - 82);
     return new Promise(function (res) { cv.toBlob(function (b) { res({ canvas: cv, blob: b }); }, 'image/png'); });
   });
 }
@@ -549,6 +551,7 @@ function showSheet(url) {
 }
 var sharing = false;
 function shareResult() {
+  track('share');
   if (!current || sharing) return; sharing = true;
   var f = current, url = shareUrl(), text = shareText(f, url);
   buildShareImage(f).then(function (r) {
@@ -561,7 +564,27 @@ function shareResult() {
   }).catch(function (e) { if (!e || e.name !== 'AbortError') toast('공유하지 못했어요. 다시 시도해 주세요.'); })
     .then(function () { sharing = false; });
 }
+var STAT_NS = 'handtalk-fortune';
+function track(ev) {
+  if (!/github\.io$|linecheckgto\.com$/.test(location.hostname)) return;
+  var d = todayKey().replace(/-/g, '');
+  [ev, ev + '-' + d].forEach(function (k) { try { fetch('https://abacus.jasoncameron.dev/hit/' + STAT_NS + '/' + k, { mode: 'no-cors', keepalive: true }); } catch (e) {} });
+}
+var PLAY_URL = 'https://play.google.com/store/apps/details?id=com.rhealabs.handtalk&referrer=utm_source%3Dhand_fortune%26utm_medium%3Dweb';
+var IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function setupCta() {
+  var b = $('storeBtn'); if (!b) return;
+  if (IS_IOS) {
+    b.removeAttribute('href'); b.removeAttribute('target'); b.setAttribute('aria-disabled', 'true'); b.classList.add('soon'); b.textContent = '아이폰 앱은 곧 출시돼요';
+    $('ctaSub').textContent = '지금은 안드로이드(Google Play)에서 먼저 만나볼 수 있어요.';
+    b.addEventListener('click', function (e) { e.preventDefault(); track('store-ios'); toast('아이폰 앱은 준비 중이에요. 조금만 기다려 주세요!'); });
+  } else {
+    b.href = PLAY_URL;
+    b.addEventListener('click', function () { track('store'); });
+  }
+}
 document.addEventListener('DOMContentLoaded', function () {
+  setupCta(); track('visit');
   var k = todayKey().split('-'); $('date').textContent = k[0] + '년 ' + Number(k[1]) + '월 ' + Number(k[2]) + '일';
   try { $('nick').value = localStorage.getItem(KEY) || ''; } catch (e) {}
   $('dealBtn').addEventListener('click', showResult);
