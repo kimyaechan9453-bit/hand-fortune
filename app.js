@@ -343,7 +343,7 @@ function shareText(f, url) { return '오늘 내 핸드는 ' + f.ev.name + ' (' +
 function fmtDate(key) { var k = key.split('-'); return k[0] + '년 ' + Number(k[1]) + '월 ' + Number(k[2]) + '일'; }
 
 /* ---------- Node export for tests ---------- */
-if (typeof module !== 'undefined' && module.exports) { module.exports = { isNuts: isNuts, explain: explain, preflopTier: preflopTier, evaluate: evaluate, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES, shareText: shareText, fmtDate: fmtDate, imgName: imgName, useNativeShare: useNativeShare }; }
+if (typeof module !== 'undefined' && module.exports) { module.exports = { isNuts: isNuts, explain: explain, preflopTier: preflopTier, evaluate: evaluate, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES, shareText: shareText, fmtDate: fmtDate, imgName: imgName, useNativeShare: useNativeShare, sharePayload: sharePayload }; }
 if (typeof document === 'undefined') return;
 
 /* ---------- UI ---------- */
@@ -547,6 +547,11 @@ function buildShareImage(f) {
 window.__buildShareImage = function () { return current ? buildShareImage(current).then(function (r) { return r.canvas.toDataURL('image/png'); }) : Promise.resolve(null); };
 function imgName(date) { return 'hand-fortune-' + String(date || '').replace(/-/g, '') + '.png'; }
 function useNativeShare(env) { return !!(env.hasShare && env.canFiles && !env.desktop); }
+function sharePayload(env) {
+  if (env.hasShare && env.ios && !env.desktop) return { text: env.text };
+  if (useNativeShare(env)) return { files: [env.file], text: env.text };
+  return null;
+}
 function isDesktop() {
   var fine = window.matchMedia && matchMedia('(pointer: fine)').matches, touch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
   var mob = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -568,7 +573,8 @@ function shareResult() {
     var file = null;
     try { if (r.blob && typeof File === 'function') file = new File([r.blob], imgName(f.date), { type: 'image/png' }); } catch (e) {}
     var canFiles = false; try { canFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] })); } catch (e) {}
-    if (useNativeShare({ hasShare: !!navigator.share, canFiles: canFiles, desktop: isDesktop() })) return navigator.share({ files: [file], text: text, url: url });
+    var payload = sharePayload({ hasShare: !!navigator.share, canFiles: canFiles, desktop: isDesktop(), ios: IS_IOS, file: file, text: text });
+    if (payload) return navigator.share(payload);
     showSheet(r.canvas.toDataURL('image/png'), r.blob, f);
   }).catch(function (e) { if (!e || e.name !== 'AbortError') toast('공유하지 못했어요. 다시 시도해 주세요.'); })
     .then(function () { sharing = false; });

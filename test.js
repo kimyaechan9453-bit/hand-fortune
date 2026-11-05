@@ -61,4 +61,13 @@ const det = a === b && a !== c; if (!det) fail++; console.log((det ? 'PASS' : 'F
 { const { imgName, useNativeShare } = require('./app.js');
   chk('imgName', imgName('2026-11-05') === 'hand-fortune-20261105.png');
   chk('native share only mobile+files', useNativeShare({ hasShare: true, canFiles: true, desktop: false }) && !useNativeShare({ hasShare: true, canFiles: true, desktop: true }) && !useNativeShare({ hasShare: true, canFiles: false, desktop: false }) && !useNativeShare({ hasShare: false, canFiles: true, desktop: false })); }
+{ const { sharePayload } = require('./app.js'); const F = { name: 'a.png' }, T = '결과 👉 https://x.io/hf/';
+  const ios = sharePayload({ hasShare: true, canFiles: true, desktop: false, ios: true, file: F, text: T });
+  chk('iOS share payload is text only', JSON.stringify(Object.keys(ios)) === '["text"]' && ios.text.indexOf('https://x.io/hf/') >= 0);
+  const iosNoFiles = sharePayload({ hasShare: true, canFiles: false, desktop: false, ios: true, file: null, text: T });
+  chk('iOS text share without file support', iosNoFiles && JSON.stringify(Object.keys(iosNoFiles)) === '["text"]');
+  const and = sharePayload({ hasShare: true, canFiles: true, desktop: false, ios: false, file: F, text: T });
+  chk('Android payload files+text, no url', JSON.stringify(Object.keys(and).sort()) === '["files","text"]' && and.files[0] === F && !('url' in and));
+  chk('no share API -> modal', sharePayload({ hasShare: false, canFiles: true, desktop: false, ios: true, file: F, text: T }) === null && sharePayload({ hasShare: false, canFiles: true, desktop: false, ios: false, file: F, text: T }) === null);
+  chk('desktop -> modal', sharePayload({ hasShare: true, canFiles: true, desktop: true, ios: false, file: F, text: T }) === null); }
 console.log(`\n${cases.length + 29 - fail}/${cases.length + 29} passed`); process.exit(fail ? 1 : 0);
