@@ -610,7 +610,14 @@ function setupCta() {
   }
 }
 document.addEventListener('DOMContentLoaded', function () {
-  setupCta(); track('visit');
+  setupCta();
+  try {
+    var vk = 'hf-visit-day', today = todayKey();
+    if (localStorage.getItem(vk) !== today) {
+      track('visit');
+      localStorage.setItem(vk, today);
+    }
+  } catch (e) { track('visit'); }
   var k = todayKey().split('-'); $('date').textContent = k[0] + '년 ' + Number(k[1]) + '월 ' + Number(k[2]) + '일';
   try { $('nick').value = localStorage.getItem(KEY) || ''; } catch (e) {}
   syncDealBtn();
