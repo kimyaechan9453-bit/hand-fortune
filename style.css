@@ -1,3 +1,8 @@
+@font-face{font-family:"Pretendard";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/Pretendard-Regular.subset.woff2) format("woff2")}
+@font-face{font-family:"Pretendard";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/Pretendard-Medium.subset.woff2) format("woff2")}
+@font-face{font-family:"Pretendard";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/Pretendard-SemiBold.subset.woff2) format("woff2")}
+@font-face{font-family:"Pretendard";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/Pretendard-Bold.subset.woff2) format("woff2")}
+@font-face{font-family:"Pretendard";font-style:normal;font-weight:800;font-display:swap;src:url(fonts/Pretendard-ExtraBold.subset.woff2) format("woff2")}
 :root{--primary:#3182F6;--soft:#E8F3FF;--bg:#F2F4F6;--card:#fff;--border:#E5E8EB;--fg:#191F28;--mut:#6B7684;--sec:#E8EAED;--ok:#00C853;--oksoft:#E8F8EF;--red:#E74C3C;--blue2:#4FA6F5;--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--sh:0 2px 8px rgba(0,0,0,.04)}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--fg);font-family:"Pretendard","Noto Sans KR",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all}

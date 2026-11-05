@@ -505,7 +505,7 @@ function drawCard(x, c, cx, cy, w, h, win) {
   x.restore();
 }
 function buildShareImage(f) {
-  var ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+  var ready = (document.fonts && document.fonts.load) ? Promise.all(['500','600','700','800'].map(function (w) { return document.fonts.load(w + ' 32px "Pretendard"', '핸드톡오늘A♠'); })).then(function () { return document.fonts.ready; }, function () {}) : Promise.resolve();
   return ready.then(loadLogo).then(function (logo) {
     var W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H; var x = cv.getContext('2d');
     x.fillStyle = '#F2F4F6'; x.fillRect(0, 0, W, H);

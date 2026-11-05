@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F2F4F6">
 <link rel="icon" href="logo.svg">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preload" href="fonts/Pretendard-Regular.subset.woff2" as="font" type="font/woff2" crossorigin>
 <title>오늘의 핸드 운세 · 핸드톡</title>
 <meta name="description" content="오늘 나의 핸드 2장과 보드 5장을 뽑아 보세요. 홀덤 족보로 보는 오늘의 운세예요.">
 <meta property="og:type" content="website">
@@ -14,15 +14,15 @@
 <meta property="og:title" content="오늘의 핸드 운세">
 <meta property="og:description" content="오늘 나의 핸드 2장과 보드 5장을 뽑아 보세요. 홀덤 족보로 보는 오늘의 운세예요.">
 <meta property="og:url" content="https://kimyaechan9453-bit.github.io/hand-fortune/">
-<meta property="og:image" content="https://kimyaechan9453-bit.github.io/hand-fortune/og-image.png">
+<meta property="og:image" content="https://kimyaechan9453-bit.github.io/hand-fortune/og-image.png?v=31">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="오늘의 핸드 운세 · 핸드톡">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="오늘의 핸드 운세">
 <meta name="twitter:description" content="오늘 나의 핸드 2장과 보드 5장을 뽑아 보세요. 홀덤 족보로 보는 오늘의 운세예요.">
-<meta name="twitter:image" content="https://kimyaechan9453-bit.github.io/hand-fortune/og-image.png">
-<link rel="stylesheet" href="style.css?v=20">
+<meta name="twitter:image" content="https://kimyaechan9453-bit.github.io/hand-fortune/og-image.png?v=31">
+<link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
 <main class="app">
@@ -37,7 +37,7 @@
       <div class="card back"></div><div class="card back"></div>
     </div>
     <h2 id="startTitle" class="sr-only">시작하기</h2>
-    <p class="intro">오늘의 내 핸드 2장과 보드 5장을 확인해 보세요.<br>닉네임을 입력하면 나만의 핸드가 나와요.</p>
+    <p class="intro">오늘의 내 핸드 2장과 보드 5장을 확인해 보세요.<br>오늘 나에게 들어온 핸드는 뭘까요?</p>
     <label for="nick" class="lbl">닉네임 (선택)</label>
     <input id="nick" type="text" maxlength="16" autocomplete="nickname" placeholder="예: 리버의신">
     <button id="dealBtn" class="btn primary" type="button">오늘의 핸드 받기</button>
@@ -104,6 +104,6 @@
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </main>
-<script src="app.js?v=30"></script>
+<script src="app.js?v=31"></script>
 </body>
 </html>
