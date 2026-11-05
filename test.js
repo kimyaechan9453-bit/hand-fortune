@@ -55,7 +55,10 @@ const det = a === b && a !== c; if (!det) fail++; console.log((det ? 'PASS' : 'F
   chk('straight draw completed on river', M('9h 8d 7s 6c 2d Kh Ts').text.includes('스트레이트 드로우가 완성'));
 }
 { const { shareText, fmtDate, makeFortune } = require('./app.js'); const f = makeFortune('2026-11-03', '예찬'); const s = shareText(f, 'https://x.io/hf/');
-  chk('shareText has hand+score+url', s === '오늘 내 핸드는 ' + f.ev.name + ' (' + f.score + '점)! 너도 뽑아 봐 👉 https://x.io/hf/');
+  chk('shareText has hand+score+url', s === '오늘 내 핸드는 ' + f.ev.name + ' (' + f.score + '점)! 여러분도 뽑아 보세요 👉 https://x.io/hf/');
   chk('shareText has no money words', !/돈|베팅|칩|머니|₩/.test(s));
   chk('fmtDate', fmtDate('2026-11-03') === '2026년 11월 3일'); }
-console.log(`\n${cases.length + 27 - fail}/${cases.length + 27} passed`); process.exit(fail ? 1 : 0);
+{ const { imgName, useNativeShare } = require('./app.js');
+  chk('imgName', imgName('2026-11-05') === 'hand-fortune-20261105.png');
+  chk('native share only mobile+files', useNativeShare({ hasShare: true, canFiles: true, desktop: false }) && !useNativeShare({ hasShare: true, canFiles: true, desktop: true }) && !useNativeShare({ hasShare: true, canFiles: false, desktop: false }) && !useNativeShare({ hasShare: false, canFiles: true, desktop: false })); }
+console.log(`\n${cases.length + 29 - fail}/${cases.length + 29} passed`); process.exit(fail ? 1 : 0);

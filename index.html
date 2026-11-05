@@ -22,7 +22,7 @@
 <meta name="twitter:title" content="오늘의 핸드 운세">
 <meta name="twitter:description" content="오늘 나의 핸드 2장과 보드 5장을 뽑아 보세요. 홀덤 족보로 보는 오늘의 운세예요.">
 <meta name="twitter:image" content="https://kimyaechan9453-bit.github.io/hand-fortune/og-image.png?v=31">
-<link rel="stylesheet" href="style.css?v=21">
+<link rel="stylesheet" href="style.css?v=22">
 </head>
 <body>
 <main class="app">
@@ -94,16 +94,24 @@
     <p class="fine">재미로 보는 운세예요. 오늘도 좋은 핸드 되세요.</p>
     <p class="fine privacy">서비스 개선을 위해 방문 수, 버튼 클릭 수 같은 익명 통계만 수집해요. 이름이나 연락처 같은 개인정보는 수집하지 않아요.</p>
   </section>
-  <div id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-    <div class="sheet-box">
-      <h3 id="sheetTitle" class="sheet-t">공유 이미지</h3>
-      <img id="sheetImg" class="sheet-img" alt="오늘의 핸드 운세 공유 이미지">
-      <a id="saveImg" class="btn primary sheet-btn" href="#">이미지 저장</a>
-      <button id="sheetClose" class="btn ghost" type="button">닫기</button>
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-box" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="sheet-head">
+        <h3 id="sheetTitle" class="sheet-t">결과를 공유해 보세요</h3>
+        <button id="sheetX" class="sheet-x" type="button" aria-label="닫기"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="sheet-frame"><img id="sheetImg" class="sheet-img" alt="오늘의 핸드 운세 공유 이미지"></div>
+      <div class="sheet-acts">
+        <a id="saveImg" class="btn primary sheet-btn" href="#">이미지 저장</a>
+        <div class="sheet-row">
+          <button id="copyLink" class="btn ghost" type="button">링크 복사</button>
+          <button id="copyImg" class="btn ghost" type="button" hidden>이미지 복사</button>
+        </div>
+      </div>
     </div>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </main>
-<script src="app.js?v=31"></script>
+<script src="app.js?v=32"></script>
 </body>
 </html>

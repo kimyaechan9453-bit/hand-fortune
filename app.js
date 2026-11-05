@@ -343,7 +343,7 @@ function shareText(f, url) { return '오늘 내 핸드는 ' + f.ev.name + ' (' +
 function fmtDate(key) { var k = key.split('-'); return k[0] + '년 ' + Number(k[1]) + '월 ' + Number(k[2]) + '일'; }
 
 /* ---------- Node export for tests ---------- */
-if (typeof module !== 'undefined' && module.exports) { module.exports = { isNuts: isNuts, explain: explain, preflopTier: preflopTier, evaluate: evaluate, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES, shareText: shareText, fmtDate: fmtDate }; }
+if (typeof module !== 'undefined' && module.exports) { module.exports = { isNuts: isNuts, explain: explain, preflopTier: preflopTier, evaluate: evaluate, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES, shareText: shareText, fmtDate: fmtDate, imgName: imgName, useNativeShare: useNativeShare }; }
 if (typeof document === 'undefined') return;
 
 /* ---------- UI ---------- */
@@ -545,10 +545,20 @@ function buildShareImage(f) {
   });
 }
 window.__buildShareImage = function () { return current ? buildShareImage(current).then(function (r) { return r.canvas.toDataURL('image/png'); }) : Promise.resolve(null); };
-function showSheet(url) {
-  var sh = $('sheet'); $('sheetImg').src = url; var a = $('saveImg'); a.href = url; a.download = 'handtalk-' + (current ? current.date : 'today') + '.png';
-  sh.hidden = false; $('sheetClose').focus();
+function imgName(date) { return 'hand-fortune-' + String(date || '').replace(/-/g, '') + '.png'; }
+function useNativeShare(env) { return !!(env.hasShare && env.canFiles && !env.desktop); }
+function isDesktop() {
+  var fine = window.matchMedia && matchMedia('(pointer: fine)').matches, touch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+  var mob = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return !mob && (fine || !touch);
 }
+var lastFocus = null, sheetBlob = null;
+function showSheet(url, blob, f) {
+  var sh = $('sheet'); sheetBlob = blob; $('sheetImg').src = url; var a = $('saveImg'); a.href = url; a.download = imgName(f.date);
+  $('copyImg').hidden = !(blob && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write && (!ClipboardItem.supports || ClipboardItem.supports('image/png')));
+  lastFocus = document.activeElement; sh.hidden = false; document.body.classList.add('locked'); $('sheetX').focus();
+}
+function hideSheet() { if ($('sheet').hidden) return; $('sheet').hidden = true; document.body.classList.remove('locked'); ($('shareBtn') || lastFocus).focus(); }
 var sharing = false;
 function shareResult() {
   track('share');
@@ -556,11 +566,10 @@ function shareResult() {
   var f = current, url = shareUrl(), text = shareText(f, url);
   buildShareImage(f).then(function (r) {
     var file = null;
-    try { if (r.blob && typeof File === 'function') file = new File([r.blob], 'handtalk-' + f.date + '.png', { type: 'image/png' }); } catch (e) {}
-    if (file && navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) return navigator.share({ files: [file], text: text, url: url });
-    if (navigator.share) return navigator.share({ text: text, url: url });
-    showSheet(r.canvas.toDataURL('image/png'));
-    return copy(text).then(function () { toast('링크를 복사했어요'); }, function () { toast('이미지를 저장해 공유해 보세요'); });
+    try { if (r.blob && typeof File === 'function') file = new File([r.blob], imgName(f.date), { type: 'image/png' }); } catch (e) {}
+    var canFiles = false; try { canFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] })); } catch (e) {}
+    if (useNativeShare({ hasShare: !!navigator.share, canFiles: canFiles, desktop: isDesktop() })) return navigator.share({ files: [file], text: text, url: url });
+    showSheet(r.canvas.toDataURL('image/png'), r.blob, f);
   }).catch(function (e) { if (!e || e.name !== 'AbortError') toast('공유하지 못했어요. 다시 시도해 주세요.'); })
     .then(function () { sharing = false; });
 }
@@ -591,9 +600,16 @@ document.addEventListener('DOMContentLoaded', function () {
   $('nick').addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
   $('skipBtn').addEventListener('click', skipDeal);
   $('shareBtn').addEventListener('click', function () { try { shareResult(); } catch (e) { sharing = false; toast('공유하지 못했어요. 다시 시도해 주세요.'); } });
-  $('sheetClose').addEventListener('click', function () { $('sheet').hidden = true; $('shareBtn').focus(); });
-  $('sheet').addEventListener('click', function (e) { if (e.target === $('sheet')) $('sheet').hidden = true; });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') $('sheet').hidden = true; });
+  $('sheetX').addEventListener('click', hideSheet);
+  $('sheet').addEventListener('click', function (e) { if (e.target === $('sheet')) hideSheet(); });
+  $('copyLink').addEventListener('click', function () { var f = current; if (!f) return; copy(shareText(f, shareUrl())).then(function () { toast('링크를 복사했어요'); }, function () { toast('복사하지 못했어요. 다시 시도해 주세요.'); }); });
+  $('copyImg').addEventListener('click', function () { try { navigator.clipboard.write([new ClipboardItem({ 'image/png': sheetBlob })]).then(function () { toast('이미지를 복사했어요'); }, function () { toast('복사하지 못했어요. 이미지 저장을 이용해 주세요.'); }); } catch (e) { toast('복사하지 못했어요. 이미지 저장을 이용해 주세요.'); } });
+  document.addEventListener('keydown', function (e) {
+    if ($('sheet').hidden) return;
+    if (e.key === 'Escape') { hideSheet(); return; }
+    if (e.key === 'Tab') { var els = Array.prototype.filter.call($('sheet').querySelectorAll('button,a[href]'), function (el) { return !el.hidden; }); var first = els[0], last = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); } }
+  });
   $('rerollBtn').addEventListener('click', reroll);
   $('resetBtn').addEventListener('click', function () { clearTimers(); document.querySelector('.app').classList.remove('compact'); $('result').hidden = true; $('start').hidden = false; $('dealBtn').focus(); window.scrollTo(0, 0); });
 });

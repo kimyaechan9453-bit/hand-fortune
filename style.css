@@ -102,12 +102,22 @@ background:radial-gradient(closest-side,#F9FAFB 78%,transparent 79%),conic-gradi
 .ex-prog{margin:6px 0 0;font-size:13px;color:var(--mut)}
 @media (prefers-reduced-motion:reduce){.ex{transition:none}}
 
-.sheet{position:fixed;inset:0;background:rgba(25,31,40,.5);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+.sheet{position:fixed;inset:0;background:rgba(25,31,40,.5);display:flex;align-items:flex-end;justify-content:center;z-index:10;animation:shFade .2s ease}
 .sheet[hidden]{display:none}
-.sheet-box{width:100%;max-width:430px;background:#fff;border-radius:var(--r-xl) var(--r-xl) 0 0;padding:20px 16px calc(16px + env(safe-area-inset-bottom));display:grid;gap:8px}
-.sheet-t{margin:0 0 4px;font-size:16px;font-weight:700}
-.sheet-img{width:100%;max-height:56vh;object-fit:contain;border-radius:var(--r-md);border:1px solid var(--border);background:#F2F4F6}
+.sheet-box{width:100%;max-width:430px;max-height:calc(100dvh - 24px);overflow:auto;box-sizing:border-box;background:#fff;border-radius:var(--r-xl) var(--r-xl) 0 0;padding:18px 20px calc(20px + env(safe-area-inset-bottom));padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right));display:grid;gap:16px;animation:shUp .25s ease}
+.sheet-head{display:flex;align-items:center;justify-content:space-between}
+.sheet-t{margin:0;font-size:18px;font-weight:700;color:var(--fg)}
+.sheet-x{width:36px;height:36px;border:0;border-radius:99px;background:#F2F4F6;color:#4E5968;display:grid;place-items:center;cursor:pointer;padding:0}
+.sheet-x:hover{background:#E5E8EB}
+.sheet-frame{background:var(--bg);border-radius:var(--r-lg);padding:16px;display:flex;justify-content:center}
+.sheet-img{display:block;max-width:100%;max-height:min(46vh,440px);width:auto;height:auto;border-radius:var(--r-md);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.sheet-acts{display:grid;gap:8px}
+.sheet-row{display:flex;gap:8px}.sheet-row .btn{flex:1}
 .sheet-btn{display:block;text-align:center;text-decoration:none;box-sizing:border-box}
+body.locked{overflow:hidden}
+@media (min-width:600px){.sheet{align-items:center;padding:24px}.sheet-box{border-radius:var(--r-xl);max-width:420px;padding:22px 24px 24px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:shPop .2s ease}}
+@keyframes shFade{from{opacity:0}}@keyframes shUp{from{transform:translateY(40px)}}@keyframes shPop{from{transform:scale(.96);opacity:0}}
+@media (prefers-reduced-motion:reduce){.sheet,.sheet-box{animation:none}}
 
 /* hide results until all cards are dealt */
 #result .rank-name,#result .reroll-note,#result .one-line,#result .score-card,#result .sec,#result .meters{transition:opacity .35s ease}
