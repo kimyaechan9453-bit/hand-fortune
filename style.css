@@ -1,4 +1,4 @@
-:root{--primary:#3182F6;--soft:#E8F3FF;--bg:#FFFFFF;--card:#fff;--border:#E5E8EB;--fg:#191F28;--mut:#6B7684;--sec:#E8EAED;--ok:#00C853;--oksoft:#E8F8EF;--red:#E74C3C;--blue2:#4FA6F5;--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--sh:0 2px 8px rgba(0,0,0,.04)}
+:root{--primary:#3182F6;--soft:#E8F3FF;--bg:#F2F4F6;--card:#fff;--border:#E5E8EB;--fg:#191F28;--mut:#6B7684;--sec:#E8EAED;--ok:#00C853;--oksoft:#E8F8EF;--red:#E74C3C;--blue2:#4FA6F5;--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--sh:0 2px 8px rgba(0,0,0,.04)}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--fg);font-family:"Pretendard","Noto Sans KR",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
@@ -139,3 +139,8 @@ body.fx-flash::after{content:"";position:fixed;inset:0;pointer-events:none;z-ind
 .skip{display:none;margin:8px auto 4px;min-width:132px;height:44px;padding:0 24px;border:0;border-radius:99px;background:var(--sec);color:var(--fg);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .skip:active{background:#DDE1E6}
 #result.dealing .skip{display:block}
+.btn:disabled{opacity:.45;cursor:default}
+.app.compact .top{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;align-items:center;column-gap:12px;margin:0 0 12px}
+.app.compact .brand{grid-row:1/3}
+.app.compact h1{grid-column:2;margin:0;font-size:15px;text-align:right;letter-spacing:-.01em}
+.app.compact .date{grid-column:2;font-size:13px;text-align:right}

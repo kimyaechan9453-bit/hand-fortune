@@ -102,8 +102,8 @@ function evaluate(cards) {
 
 /* ---------- copy library ---------- */
 var MSG = [
-  ['큰 핸드는 아니어도 하이카드로 이기는 날도 있어요. 무리하지 않고 차분하게 흐름을 보면 충분합니다.', '오늘은 폴드도 좋은 선택이에요. 아낀 에너지는 꼭 필요한 순간에 쓰면 됩니다.', '조용한 핸드일수록 읽을 게 많아요. 주변을 천천히 관찰하는 하루가 되면 좋겠어요.', '평범한 하루가 가장 편안할 때도 있어요. 작은 루틴 하나를 잘 지켜보세요.'],
-  ['작은 페어 하나가 하루를 든든하게 받쳐 줘요. 익숙한 것에서 좋은 기회가 보일 거예요.', '한 가지에 집중하면 결과가 따라오는 날이에요. 할 일을 하나만 골라 끝까지 해 보세요.', '오늘은 짝이 잘 맞는 날이에요. 함께하는 사람과 생각이 잘 통할 수 있어요.', '무난하지만 탄탄한 출발이에요. 서두르지 않으면 충분히 좋은 하루가 됩니다.'],
+  ['큰 핸드는 아니어도 하이카드로 이기는 날도 있어요. 무리하지 않고 차분하게 흐름을 보면 충분해요.', '오늘은 폴드도 좋은 선택이에요. 아낀 에너지는 꼭 필요한 순간에 쓰면 돼요.', '조용한 핸드일수록 읽을 게 많아요. 주변을 천천히 관찰하는 하루가 되면 좋겠어요.', '평범한 하루가 가장 편안할 때도 있어요. 작은 루틴 하나를 잘 지켜보세요.'],
+  ['작은 페어 하나가 하루를 든든하게 받쳐 줘요. 익숙한 것에서 좋은 기회가 보일 거예요.', '한 가지에 집중하면 결과가 따라오는 날이에요. 할 일을 하나만 골라 끝까지 해 보세요.', '오늘은 짝이 잘 맞는 날이에요. 함께하는 사람과 생각이 잘 통할 수 있어요.', '무난하지만 탄탄한 출발이에요. 서두르지 않으면 충분히 좋은 하루가 돼요.'],
   ['두 가지 일이 나란히 잘 풀리는 흐름이에요. 미뤄 둔 일과 새 일을 같이 챙겨 보세요.', '균형 감각이 빛나는 날이에요. 일과 쉼 사이를 잘 나누면 만족도가 높아져요.', '선택지가 두 개라면 둘 다 괜찮아요. 마음이 조금 더 가는 쪽을 골라 보세요.', '차곡차곡 쌓아 온 것들이 보이기 시작해요. 스스로를 한 번 칭찬해 주세요.'],
   ['세 장이 모인 만큼 존재감이 확실한 날이에요. 내 의견을 편하게 이야기해 보세요.', '준비해 온 일이 힘을 얻는 흐름이에요. 자신감을 가져도 좋아요.', '오늘은 꾸준함이 통하는 날이에요. 한 번 더 해 보는 끈기가 좋은 결과로 이어져요.', '주변의 도움이 자연스럽게 모여요. 고마운 마음은 바로 표현해 보세요.'],
   ['하나씩 이어지는 연결이 좋은 날이에요. 계획한 순서대로 움직이면 술술 풀려요.', '흐름을 타는 하루예요. 막혔던 일이 의외의 계기로 이어질 수 있어요.', '차근차근 단계를 밟는 힘이 빛나요. 오늘 정한 목표는 생각보다 가까이 있어요.', '앞뒤가 딱 맞아떨어지는 날이에요. 미뤄 둔 정리를 해 두면 마음이 가벼워져요.'],
@@ -113,12 +113,12 @@ var MSG = [
   ['아주 드문 핸드가 들어왔어요. 흐름도 방향도 모두 잘 맞는 하루예요.', '오늘은 하는 일마다 손발이 척척 맞아요. 평소 미뤄 둔 도전을 꺼내 봐도 좋아요.', '이런 날은 자주 오지 않아요. 오늘의 기분 좋은 순간을 사진으로 남겨 두세요.'],
   ['로열 플러시, 정말 보기 드문 핸드예요. 오늘 하루는 마음껏 웃으셔도 좋아요.', '최고의 핸드가 들어왔어요. 좋은 일이 생기면 고마운 사람에게 먼저 소식을 전해 보세요.', '오늘의 주인공은 바로 나예요. 이 기분 그대로 하루를 즐겨 보세요.']
 ];
-var ONE = ['좋은 폴드는 다음 핸드를 위한 준비예요.', '조급할 땐 한 템포 쉬어 가도 괜찮아요.', '오늘의 리뷰가 내일의 실력이 됩니다.', '포지션처럼, 타이밍이 전부일 때가 있어요.', '작은 선택이 모여 좋은 하루를 만들어요.', '내 페이스를 지키는 사람이 결국 웃어요.', '보드는 바뀌어도 내 기본기는 그대로예요.', '가끔은 체크하고 지켜보는 게 정답이에요.', '좋은 핸드는 좋은 기분에서 시작돼요.', '오늘의 나에게 BB 하나만큼의 여유를 주세요.', '오늘 만나는 사람이 좋은 테이블 메이트가 될지도 몰라요.', '정리된 머릿속이 가장 강한 무기예요.'];
+var ONE = ['좋은 폴드는 다음 핸드를 위한 준비예요.', '조급할 땐 한 템포 쉬어 가도 괜찮아요.', '오늘의 리뷰가 내일의 실력이 돼요.', '포지션처럼, 타이밍이 전부일 때가 있어요.', '작은 선택이 모여 좋은 하루를 만들어요.', '내 페이스를 지키는 사람이 결국 웃어요.', '보드는 바뀌어도 내 기본기는 그대로예요.', '가끔은 체크하고 지켜보는 게 정답이에요.', '좋은 핸드는 좋은 기분에서 시작돼요.', '오늘의 나에게 BB 하나만큼의 여유를 주세요.', '오늘 만나는 사람이 좋은 테이블 메이트가 될지도 몰라요.', '정리된 머릿속이 가장 강한 무기예요.'];
 var AREAS = [
   { s: 's', name: '일 · 집중', hi: ['집중력이 좋은 날이에요. 중요한 일은 오전에 먼저 끝내 보세요.', '머리가 맑은 날이에요. 미뤄 둔 기획이나 공부를 꺼내 보세요.', '판단이 빠르고 정확해요. 결정할 일이 있다면 오늘이 좋아요.'], lo: ['집중이 잘 안 되면 25분 일하고 5분 쉬는 식으로 나눠 보세요.', '할 일 목록을 세 개로 줄이면 훨씬 가벼워져요.', '알림을 잠깐 꺼 두면 생각보다 많은 걸 끝낼 수 있어요.'] },
   { s: 'h', name: '관계 · 감정', hi: ['마음이 잘 통하는 날이에요. 오랜만에 안부를 전해 보세요.', '따뜻한 말 한마디가 크게 돌아오는 날이에요.', '함께하는 시간이 즐거워요. 가벼운 약속을 잡아 보세요.'], lo: ['감정이 오르내리면 잠깐 산책하며 숨을 골라 보세요.', '오늘은 듣는 쪽에 조금 더 서 보면 좋아요.', '서운한 일이 있어도 하루만 지나고 이야기해 보세요.'] },
   { s: 'd', name: '성과 · 기회', hi: ['노력한 만큼 인정받기 좋은 날이에요. 결과물을 자신 있게 보여 주세요.', '새로운 제안이나 기회가 눈에 띌 수 있어요. 가볍게 메모해 두세요.', '작은 성과가 이어지는 흐름이에요. 오늘 한 일을 기록해 보세요.'], lo: ['오늘은 새로 벌이기보다 하던 일을 마무리하는 게 좋아요.', '큰 결정은 하루 미뤄도 괜찮아요. 정보를 더 모아 보세요.', '서두르지 않아도 기회는 다시 와요. 준비에 집중해 보세요.'] },
-  { s: 'c', name: '건강 · 활력', hi: ['몸이 가벼운 날이에요. 가볍게 걷거나 스트레칭해 보세요.', '에너지가 넉넉해요. 미뤄 둔 운동을 시작하기 좋아요.', '컨디션이 좋은 만큼 수면 리듬도 잘 챙겨 주세요.'], lo: ['물을 자주 마시고 화면에서 눈을 자주 떼 주세요.', '오늘은 일찍 잠자리에 드는 것만으로도 충분해요.', '긴 세션은 잠시 쉬어 가요. 몸이 먼저입니다.'] }
+  { s: 'c', name: '건강 · 활력', hi: ['몸이 가벼운 날이에요. 가볍게 걷거나 스트레칭해 보세요.', '에너지가 넉넉해요. 미뤄 둔 운동을 시작하기 좋아요.', '컨디션이 좋은 만큼 수면 리듬도 잘 챙겨 주세요.'], lo: ['물을 자주 마시고 화면에서 눈을 자주 떼 주세요.', '오늘은 일찍 잠자리에 드는 것만으로도 충분해요.', '긴 세션은 잠시 쉬어 가요. 몸이 먼저예요.'] }
 ];
 
 var CONTRIB = {
@@ -339,7 +339,7 @@ function makeFortune(dateKey, nick, reroll, dev) {
 }
 
 /* ---------- share text ---------- */
-function shareText(f, url) { return '오늘 내 핸드는 ' + f.ev.name + ' (' + f.score + '점)! 너도 뽑아 봐 👉 ' + url; }
+function shareText(f, url) { return '오늘 내 핸드는 ' + f.ev.name + ' (' + f.score + '점)! 여러분도 뽑아 보세요 👉 ' + url; }
 function fmtDate(key) { var k = key.split('-'); return k[0] + '년 ' + Number(k[1]) + '월 ' + Number(k[2]) + '일'; }
 
 /* ---------- Node export for tests ---------- */
@@ -452,24 +452,27 @@ function render(f) {
 var skipFn = null;
 function skipDeal() { if (skipFn) skipFn(); }
 var RKEY = 'handtalk.fortune.reroll';
-function getReroll(nick) { try { var o = JSON.parse(localStorage.getItem(RKEY) || '{}'); return (o.date === todayKey() && o.nick === nick) ? (o.n || 0) : 0; } catch (e) { return 0; } }
-function setReroll(nick, n) { try { localStorage.setItem(RKEY, JSON.stringify({ date: todayKey(), nick: nick, n: n })); } catch (e) {} }
+var MAX_REROLL = 2;
+function getReroll() { try { var o = JSON.parse(localStorage.getItem(RKEY) || '{}'); return o.date === todayKey() ? (o.n || 0) : 0; } catch (e) { return 0; } }
+function setReroll(n) { try { localStorage.setItem(RKEY, JSON.stringify({ date: todayKey(), n: n })); } catch (e) {} }
+function updateRerollBtn() { var used = Math.max(getReroll(), rerollMem), left = Math.max(0, MAX_REROLL - used), b = $('rerollBtn'); b.textContent = '다시 뽑기 ' + left + '/' + MAX_REROLL; b.disabled = left === 0; b.setAttribute('aria-label', left ? '다시 뽑기, 오늘 ' + left + '번 남았어요' : '오늘 다시 뽑기를 모두 사용했어요'); }
 var rerollMem = 0;
 function reroll() {
   if (!current) return;
-  var n = Math.max(getReroll(current.nick), rerollMem) + 1; rerollMem = n; setReroll(current.nick, n);
+  var used = Math.max(getReroll(), rerollMem); if (used >= MAX_REROLL) { updateRerollBtn(); toast('오늘 다시 뽑기를 모두 사용했어요'); return; }
+  var n = used + 1; rerollMem = n; setReroll(n);
   current = makeFortune(todayKey(), current.nick, n, DEV);
   $('result').classList.remove('fade'); void $('result').offsetWidth; $('result').classList.add('fade');
-  render(current); window.scrollTo(0, 0);
+  render(current); updateRerollBtn(); window.scrollTo(0, 0);
   $('handName').focus({ preventScroll: true });
 }
 function showResult() {
   var nick = $('nick').value.trim();
   try { localStorage.setItem(KEY, nick); } catch (e) {}
-  if (!current || current.nick !== nick) rerollMem = 0;
   current = makeFortune(todayKey(), nick, 0, DEV);
+  document.querySelector('.app').classList.add('compact');
   $('start').hidden = true; $('result').hidden = false; $('result').classList.add('fade');
-  render(current);
+  render(current); updateRerollBtn();
   $('handName').setAttribute('tabindex', '-1'); $('handName').focus({ preventScroll: true });
   window.scrollTo(0, 0);
 }
@@ -503,7 +506,7 @@ function drawCard(x, c, cx, cy, w, h, win) {
 function buildShareImage(f) {
   var ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
   return ready.then(loadLogo).then(function (logo) {
-    var W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H; var x = cv.getContext('2d');
+    var W = 1080, H = 1520, cv = document.createElement('canvas'); cv.width = W; cv.height = H; var x = cv.getContext('2d');
     x.fillStyle = '#F2F4F6'; x.fillRect(0, 0, W, H);
     rrect(x, 60, 60, W - 120, H - 120, 48); x.fillStyle = '#fff'; x.fill(); x.strokeStyle = '#E5E8EB'; x.lineWidth = 2; x.stroke();
     var L = 120;
@@ -530,9 +533,12 @@ function buildShareImage(f) {
     pills.forEach(function (p, i) { var c = TC[Math.max(2, p[1])]; rrect(x, px, 1135 - 26, pw[i], 52, 26); x.fillStyle = c[0]; x.fill();
       x.fillStyle = c[1]; x.font = '700 30px ' + FONT; x.textAlign = 'center'; x.fillText(p[0], px + pw[i] / 2, 1136); px += pw[i] + 12; });
     x.textAlign = 'center';
-    x.fillStyle = '#4E5968'; x.font = '500 34px ' + FONT;
-    wrapLines(x, '“' + f.oneLine + '”', W - 280).slice(0, 2).forEach(function (l, i) { x.fillText(l, W / 2, 1195 + i * 46); });
-    x.fillStyle = '#8B95A1'; x.font = '500 28px ' + FONT; x.fillText(shareUrl().replace(/^https?:\/\//, ''), W / 2, 1262);
+    rrect(x, 120, 1180, W - 240, 128, 24); x.fillStyle = '#F2F7FF'; x.fill();
+    x.fillStyle = '#191F28'; x.font = '600 34px ' + FONT;
+    var ml = wrapLines(x, f.message, W - 320).slice(0, 2); ml.forEach(function (l, i) { x.fillText(l, W / 2, 1244 + (i - (ml.length - 1) / 2) * 46); });
+    x.fillStyle = '#4E5968'; x.font = '500 30px ' + FONT;
+    var ol = wrapLines(x, '“' + f.oneLine + '”', W - 280).slice(0, 2); ol.forEach(function (l, i) { x.fillText(l, W / 2, 1360 + i * 42); });
+    x.fillStyle = '#8B95A1'; x.font = '500 28px ' + FONT; x.fillText(shareUrl().replace(/^https?:\/\//, ''), W / 2, 1360 + ol.length * 42 + 30);
     return new Promise(function (res) { cv.toBlob(function (b) { res({ canvas: cv, blob: b }); }, 'image/png'); });
   });
 }
@@ -566,7 +572,7 @@ document.addEventListener('DOMContentLoaded', function () {
   $('sheet').addEventListener('click', function (e) { if (e.target === $('sheet')) $('sheet').hidden = true; });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') $('sheet').hidden = true; });
   $('rerollBtn').addEventListener('click', reroll);
-  $('resetBtn').addEventListener('click', function () { clearTimers(); $('result').hidden = true; $('start').hidden = false; $('dealBtn').focus(); window.scrollTo(0, 0); });
+  $('resetBtn').addEventListener('click', function () { clearTimers(); document.querySelector('.app').classList.remove('compact'); $('result').hidden = true; $('start').hidden = false; $('dealBtn').focus(); window.scrollTo(0, 0); });
 });
 })();
 
