@@ -315,10 +315,18 @@ function todayKey() {
   catch (e) { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
 }
 function pick(rnd, arr) { return arr[Math.floor(rnd() * arr.length)]; }
+function isBoardOnlyBad(cards) {
+  var ev = evaluate(cards);
+  var holeUsed = ev.best5.filter(function (i) { return i < 2; }).length;
+  if (holeUsed !== 0) return false;
+  // board-only 투페어 / 트리플 / 포카드 — hole cards not in best5
+  return ev.rank === 2 || ev.rank === 3 || ev.rank === 7;
+}
 function makeFortune(dateKey, nick, reroll, dev) {
   reroll = reroll || 0;
   var rnd = mulberry32(hashStr(dateKey + '|' + (nick || '').trim().toLowerCase() + (dev ? '|d' + dev : '') + (reroll ? '|r' + reroll : '')));
-  var cards = dealHand(rnd);
+  var cards = dealHand(rnd), guard = 0;
+  while (isBoardOnlyBad(cards) && guard++ < 40) cards = dealHand(rnd);
   var ev = evaluate(cards);
   var bal = AREAS.map(function (a) {
     var e = 22;
@@ -344,7 +352,7 @@ function fmtDate(key) { var k = key.split('-'); return k[0] + '년 ' + Number(k[
 
 /* ---------- Node export for tests ---------- */
 function validNick(v) { return typeof v === 'string' && v.trim().length > 0; }
-if (typeof module !== 'undefined' && module.exports) { module.exports = { validNick: validNick, isNuts: isNuts, explain: explain, preflopTier: preflopTier, evaluate: evaluate, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES, shareText: shareText, fmtDate: fmtDate, imgName: imgName, useNativeShare: useNativeShare, sharePayload: sharePayload }; }
+if (typeof module !== 'undefined' && module.exports) { module.exports = { validNick: validNick, isNuts: isNuts, explain: explain, preflopTier: preflopTier, evaluate: evaluate, isBoardOnlyBad: isBoardOnlyBad, makeFortune: makeFortune, HAND_NAMES: HAND_NAMES, shareText: shareText, fmtDate: fmtDate, imgName: imgName, useNativeShare: useNativeShare, sharePayload: sharePayload }; }
 if (typeof document === 'undefined') return;
 
 /* ---------- UI ---------- */
